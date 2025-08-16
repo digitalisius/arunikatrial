@@ -207,7 +207,7 @@
         const userIdDisplay = document.getElementById('user-id');
         
         // Listen for authentication state changes
-        onAuthStateChanged(auth, (user) => {
+        onAuthStateChanged(auth, async (user) => {
             if (user) {
                 // User is signed in, show admin panel
                 userId = user.uid;
@@ -216,6 +216,7 @@
                 loginContainer.classList.add('hidden');
                 adminContent.classList.remove('hidden');
                 console.log("Admin signed in. User ID:", userId);
+                // Listen for real-time changes to products and testimonials
                 listenForProducts();
                 listenForTestimonials();
             } else {
@@ -233,10 +234,14 @@
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
             try {
+                loadingContainer.classList.remove('hidden');
+                loginContainer.classList.add('hidden');
                 await signInWithEmailAndPassword(auth, email, password);
                 showModal('Sukses', 'Login berhasil!');
             } catch (error) {
                 console.error("Login failed:", error);
+                loadingContainer.classList.add('hidden');
+                loginContainer.classList.remove('hidden');
                 showModal('Gagal Login', 'Email atau kata sandi salah. Silakan coba lagi.');
             }
         });
@@ -285,9 +290,13 @@
             if (category === 'Kopi') {
                 coffeeFields.classList.remove('hidden');
                 nonCoffeeFields.classList.add('hidden');
+                productPriceInput.removeAttribute('required');
+                productShopeeLinkInput.removeAttribute('required');
             } else {
                 coffeeFields.classList.add('hidden');
                 nonCoffeeFields.classList.remove('hidden');
+                productPriceInput.setAttribute('required', 'required');
+                // shopeeLink is optional
             }
         }
         productCategorySelect.addEventListener('change', (event) => {
