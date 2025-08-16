@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Admin Arunika</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        .modal-container {
+            background-color: #1f1f1f;
+            padding: 2rem;
+            border-radius: 1.5rem;
+            max-width: 90%;
+            width: 24rem;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            color: #e0e0e0;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-200 p-4 md:p-8">
+
+    <div class="max-w-6xl mx-auto bg-gray-800 p-6 md:p-10 rounded-3xl shadow-2xl">
+        <header class="text-center mb-6">
+            <h1 class="text-3xl font-bold text-amber-500">Panel Admin</h1>
+            <p class="text-md text-gray-400">Kelola Produk dan Testimoni Anda</p>
+            <p id="user-id" class="mt-2 text-xs text-gray-500 break-all"></p>
+        </header>
+
+        <!-- Loading state -->
+        <div id="loading-container" class="text-center p-8">
+            <div class="animate-spin rounded-full h-12 w-12 border-4 border-amber-500 border-t-transparent mx-auto"></div>
+            <p class="mt-4">Memuat data...</p>
+        </div>
+
+        <!-- Login Form -->
+        <div id="login-container" class="hidden">
+            <h2 class="text-2xl font-bold text-center mb-4">Login Admin</h2>
+            <form id="login-form" class="space-y-4 p-6 bg-gray-900 rounded-lg max-w-sm mx-auto">
+                <div>
+                    <label for="login-email" class="block text-sm font-medium">Email</label>
+                    <input type="email" id="login-email" required class="w-full bg-gray-700 text-gray-200 border border-gray-600 rounded-lg p-3">
+                </div>
+                <div>
+                    <label for="login-password" class="block text-sm font-medium">Kata Sandi</label>
+                    <input type="password" id="login-password" required class="w-full bg-gray-700 text-gray-200 border border-gray-600 rounded-lg p-3">
+                </div>
+                <button type="submit" class="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg transition-colors">Masuk</button>
+            </form>
+        </div>
+
+        <!-- Main content after loading and login -->
+        <div id="admin-content" class="hidden">
+            
+            <section class="mb-8 p-6 bg-gray-900 rounded-lg">
+                <h2 class="text-2xl font-bold mb-4">Kelola Produk</h2>
+                <form id="product-form" class="space-y-4">
+                    <input type="hidden" id="product-id">
+                    <div>
+                        <label for="product-name" class="block text-sm font-medium">Nama Produk</label>
+                        <input type="text" id="product-name" required class="w-full bg-gray-700 text-gray-200 border border-gray-600 rounded-lg p-3">
+                    </div>
+                    <div>
+                        <label for="product-category" class="block text-sm font-medium">Kategori</label>
+                        <select id="product-category" required class="w-full bg-gray-700 text-gray-200 border border-gray-600 rounded-lg p-3">
+                            <option value="Kopi">Kopi</option>
+                            <option value="Makanan">Makanan</option>
+                            <option value="Minuman">Minuman</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Form untuk Kategori Kopi -->
+                    <div id="coffee-fields">
+                        <div id="sub-category-container">
+                            <label for="product-sub-category" class="block text-sm font-medium">Sub-Kategori Kopi</label>
+                            <select id="product-sub-category" class="w-full bg-gray-700 text-gray-200 border border-gray-600 rounded-lg p-3">
+                                <option value="Arabika">Arabika</option>
+                                <option value="Robusta">Robusta</option>
+                            </select>
+                        </div>
+                        <div id="options-container" class="space-y-2">
+                            <!-- Options will be added dynamically here -->
+                        </div>
+                        <button type="button" id="add-option-btn" class="bg-blue-500 text-white py-2 px-4 rounded-lg text-sm">Tambah Varian</button>
+                    </div>
+                    
+                    <!-- Form untuk Kategori Makanan & Minuman -->
+                    <div id="non-coffee-fields" class="hidden">
+                        <div>
+                            <label for="product-price" class="block text-sm font-medium">Harga</label>
+                            <input type="number" id="product-price" placeholder="Contoh: 50000" class="w-full bg-gray-700 text-gray-200 border border-gray-600 rounded-lg p-3">
+                        </div>
+                        <div>
+                            <label for="product-shopee-link" class="block text-sm font-medium">Link Shopee</label>
+                            <input type="url" id="product-shopee-link" placeholder="Contoh: https://shopee.co.id/item" class="w-full bg-gray-700 text-gray-200 border border-gray-600 rounded-lg p-3">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label for="product-is-best-seller" class="flex items-center space-x-2">
+                            <input type="checkbox" id="product-is-best-seller" class="form-checkbox h-5 w-5 text-amber-600 bg-gray-700 border-gray-600 rounded">
+                            <span class="text-sm font-medium">Produk Terlaris</span>
+                        </label>
+                    </div>
+
+                    <div class="flex space-x-4">
+                        <button type="submit" id="save-product-btn" class="flex-1 py-3 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg transition-colors">Tambah/Edit Produk</button>
+                        <button type="button" id="cancel-edit-btn" class="hidden flex-1 py-3 bg-gray-600 hover:bg-gray-500 text-white font-bold rounded-lg transition-colors">Batal</button>
+                    </div>
+                </form>
+
+                <div class="mt-8">
+                    <h3 class="text-lg font-bold mb-2">Daftar Produk</h3>
+                    <table class="w-full text-left table-auto">
+                        <thead>
+                            <tr class="bg-gray-700 text-gray-400 uppercase text-xs leading-normal">
+                                <th class="py-3 px-6">Nama</th>
+                                <th class="py-3 px-6">Kategori</th>
+                                <th class="py-3 px-6">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="product-list" class="text-sm font-light">
+                            <!-- Products will be listed here -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+            
+            <hr class="my-10 border-t border-gray-700">
+
+            <section class="p-6 bg-gray-900 rounded-lg">
+                <h2 class="text-2xl font-bold mb-4">Kelola Testimoni</h2>
+                <form id="testimonial-form" class="space-y-4">
+                    <input type="hidden" id="testimonial-id">
+                    <div>
+                        <label for="testimonial-thumb-url" class="block text-sm font-medium">URL Gambar Thumbnail</label>
+                        <input type="url" id="testimonial-thumb-url" required class="w-full bg-gray-700 text-gray-200 border border-gray-600 rounded-lg p-3">
+                    </div>
+                    <div>
+                        <label for="testimonial-full-url" class="block text-sm font-medium">URL Gambar Penuh</label>
+                        <input type="url" id="testimonial-full-url" required class="w-full bg-gray-700 text-gray-200 border border-gray-600 rounded-lg p-3">
+                    </div>
+                    <div class="flex space-x-4">
+                        <button type="submit" id="save-testimonial-btn" class="flex-1 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg transition-colors">Tambah/Edit Testimoni</button>
+                        <button type="button" id="cancel-testimonial-edit-btn" class="hidden flex-1 py-3 bg-gray-600 hover:bg-gray-500 text-white font-bold rounded-lg transition-colors">Batal</button>
+                    </div>
+                </form>
+                
+                <div class="mt-8">
+                    <h3 class="text-lg font-bold mb-2">Daftar Testimoni</h3>
+                    <div id="testimonial-list" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                        <!-- Testimonials will be listed here -->
+                    </div>
+                </div>
+            </section>
+        </div>
+        
+    </div>
+
+    <!-- Modal for general messages -->
+    <div id="modal" class="hidden modal-overlay">
+        <div class="modal-container">
+            <h3 id="modal-title" class="text-xl font-bold mb-4 text-amber-400"></h3>
+            <p id="modal-message" class="text-gray-300 mb-6"></p>
+            <button id="modal-close-btn" class="bg-amber-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-amber-700">OK</button>
+        </div>
+    </div>
+    
+    <!-- Script Firebase -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, doc, setDoc, deleteDoc, onSnapshot, query, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global variables provided by the Canvas environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        let userId;
+
+        const loginForm = document.getElementById('login-form');
+        const loginContainer = document.getElementById('login-container');
+        const adminContent = document.getElementById('admin-content');
+        const loadingContainer = document.getElementById('loading-container');
+        const userIdDisplay = document.getElementById('user-id');
+        
+        // Listen for authentication state changes
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // User is signed in, show admin panel
+                userId = user.uid;
+                userIdDisplay.textContent = `User ID: ${userId}`;
+                loadingContainer.classList.add('hidden');
+                loginContainer.classList.add('hidden');
+                adminContent.classList.remove('hidden');
+                console.log("Admin signed in. User ID:", userId);
+                listenForProducts();
+                listenForTestimonials();
+            } else {
+                // User is signed out, show login form
+                loadingContainer.classList.add('hidden');
+                loginContainer.classList.remove('hidden');
+                adminContent.classList.add('hidden');
+                console.log("User not signed in. Showing login form.");
+            }
+        });
+        
+        // Handle login form submission
+        loginForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                showModal('Sukses', 'Login berhasil!');
+            } catch (error) {
+                console.error("Login failed:", error);
+                showModal('Gagal Login', 'Email atau kata sandi salah. Silakan coba lagi.');
+            }
+        });
+
+        // DOM elements
+        const productForm = document.getElementById('product-form');
+        const productIdInput = document.getElementById('product-id');
+        const productNameInput = document.getElementById('product-name');
+        const productCategorySelect = document.getElementById('product-category');
+        const coffeeFields = document.getElementById('coffee-fields');
+        const nonCoffeeFields = document.getElementById('non-coffee-fields');
+        const productPriceInput = document.getElementById('product-price');
+        const productShopeeLinkInput = document.getElementById('product-shopee-link');
+        const productSubCategorySelect = document.getElementById('product-sub-category');
+        const productIsBestSellerCheckbox = document.getElementById('product-is-best-seller');
+        const optionsContainer = document.getElementById('options-container');
+        const addOptionBtn = document.getElementById('add-option-btn');
+        const productListTable = document.getElementById('product-list');
+        const cancelEditBtn = document.getElementById('cancel-edit-btn');
+        
+        const testimonialForm = document.getElementById('testimonial-form');
+        const testimonialIdInput = document.getElementById('testimonial-id');
+        const testimonialThumbUrlInput = document.getElementById('testimonial-thumb-url');
+        const testimonialFullUrlInput = document.getElementById('testimonial-full-url');
+        const testimonialListDiv = document.getElementById('testimonial-list');
+        const cancelTestimonialEditBtn = document.getElementById('cancel-testimonial-edit-btn');
+        
+        const modal = document.getElementById('modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalMessage = document.getElementById('modal-message');
+        const modalCloseBtn = document.getElementById('modal-close-btn');
+
+        // Functions for modal
+        function showModal(title, message) {
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            modal.classList.remove('hidden');
+        }
+
+        modalCloseBtn.addEventListener('click', () => {
+            modal.classList.add('hidden');
+        });
+
+        // Show/hide fields based on category
+        function updateFormFields(category) {
+            if (category === 'Kopi') {
+                coffeeFields.classList.remove('hidden');
+                nonCoffeeFields.classList.add('hidden');
+            } else {
+                coffeeFields.classList.add('hidden');
+                nonCoffeeFields.classList.remove('hidden');
+            }
+        }
+        productCategorySelect.addEventListener('change', (event) => {
+            updateFormFields(event.target.value);
+        });
+        
+        // Product Options Management
+        function createOptionInput(option = { name: '', price: '' }) {
+            const optionGroup = document.createElement('div');
+            optionGroup.className = 'flex space-x-2 items-center';
+            optionGroup.innerHTML = `
+                <input type="text" value="${option.name}" placeholder="Nama Varian (contoh: 100g)" class="option-name w-1/2 bg-gray-700 text-gray-200 border border-gray-600 rounded-lg p-3">
+                <input type="number" value="${option.price}" placeholder="Harga (contoh: 30000)" class="option-price w-1/2 bg-gray-700 text-gray-200 border border-gray-600 rounded-lg p-3">
+                <button type="button" class="remove-option-btn text-red-500 hover:text-red-400 p-2"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+            `;
+            optionsContainer.appendChild(optionGroup);
+            optionGroup.querySelector('.remove-option-btn').addEventListener('click', () => {
+                optionGroup.remove();
+            });
+        }
+        addOptionBtn.addEventListener('click', () => createOptionInput());
+
+        // PRODUCT CRUD OPERATIONS
+        
+        function listenForProducts() {
+            const productsCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/products`);
+            onSnapshot(query(productsCollectionRef), (snapshot) => {
+                productListTable.innerHTML = '';
+                snapshot.docs.forEach(doc => {
+                    const product = { id: doc.id, ...doc.data() };
+                    const row = document.createElement('tr');
+                    row.className = 'border-b border-gray-700 hover:bg-gray-700 transition-colors';
+                    row.innerHTML = `
+                        <td class="py-3 px-6">${product.name}</td>
+                        <td class="py-3 px-6">${product.category}${product.subCategory ? ` (${product.subCategory})` : ''}</td>
+                        <td class="py-3 px-6 flex space-x-2">
+                            <button data-id="${product.id}" class="edit-product-btn bg-yellow-500 text-white px-3 py-1 rounded-lg text-xs hover:bg-yellow-600">Edit</button>
+                            <button data-id="${product.id}" class="delete-product-btn bg-red-500 text-white px-3 py-1 rounded-lg text-xs hover:bg-red-600">Hapus</button>
+                        </td>
+                    `;
+                    productListTable.appendChild(row);
+                });
+            }, (error) => {
+                console.error("Error fetching products:", error);
+                showModal('Error', 'Gagal memuat produk.');
+            });
+        }
+        
+        productForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const name = productNameInput.value.trim();
+            const category = productCategorySelect.value;
+            const isBestSeller = productIsBestSellerCheckbox.checked;
+            
+            let productData;
+            
+            if (category === 'Kopi') {
+                const subCategory = productSubCategorySelect.value;
+                const optionElements = optionsContainer.querySelectorAll('div');
+                const options = Array.from(optionElements).map(el => {
+                    const optionName = el.querySelector('.option-name').value.trim();
+                    const optionPrice = parseInt(el.querySelector('.option-price').value, 10);
+                    return { name: optionName, price: optionPrice, id: `${name.replace(/\s/g, '').toLowerCase()}-${optionName.replace(/\s/g, '').toLowerCase()}` };
+                }).filter(o => o.name && !isNaN(o.price));
+                if (options.length === 0) {
+                     showModal('Error', 'Silakan tambahkan setidaknya satu varian produk kopi.');
+                     return;
+                }
+                productData = { name, category, subCategory, isBestSeller, options };
+            } else {
+                const price = parseInt(productPriceInput.value, 10);
+                const shopeeLink = productShopeeLinkInput.value.trim();
+                if (isNaN(price)) {
+                    showModal('Error', 'Harga harus berupa angka.');
+                    return;
+                }
+                productData = { name, category, isBestSeller, price, shopeeLink };
+            }
+
+            const productId = productIdInput.value;
+            try {
+                if (productId) {
+                    await setDoc(doc(db, `artifacts/${appId}/users/${userId}/products`, productId), productData);
+                    showModal('Sukses', 'Produk berhasil diperbarui!');
+                } else {
+                    await addDoc(collection(db, `artifacts/${appId}/users/${userId}/products`), productData);
+                    showModal('Sukses', 'Produk berhasil ditambahkan!');
+                }
+                productForm.reset();
+                productIdInput.value = '';
+                optionsContainer.innerHTML = '';
+                updateFormFields(productCategorySelect.value);
+                cancelEditBtn.classList.add('hidden');
+            } catch (error) {
+                console.error("Error adding/updating product:", error);
+                showModal('Error', 'Terjadi kesalahan. Coba lagi.');
+            }
+        });
+        
+        productListTable.addEventListener('click', async (event) => {
+            const target = event.target;
+            const productId = target.dataset.id;
+            
+            if (target.classList.contains('edit-product-btn')) {
+                const productsCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/products`);
+                const snapshot = await getDocs(query(productsCollectionRef));
+                const productDoc = snapshot.docs.find(doc => doc.id === productId);
+                if (!productDoc) return;
+                const product = productDoc.data();
+
+                productIdInput.value = productId;
+                productNameInput.value = product.name;
+                productCategorySelect.value = product.category;
+                productIsBestSellerCheckbox.checked = product.isBestSeller;
+
+                updateFormFields(product.category);
+
+                if (product.category === 'Kopi') {
+                    productSubCategorySelect.value = product.subCategory;
+                    optionsContainer.innerHTML = '';
+                    if (product.options && Array.isArray(product.options)) {
+                        product.options.forEach(opt => createOptionInput(opt));
+                    }
+                } else {
+                    productPriceInput.value = product.price || '';
+                    productShopeeLinkInput.value = product.shopeeLink || '';
+                }
+                cancelEditBtn.classList.remove('hidden');
+            } else if (target.classList.contains('delete-product-btn')) {
+                if (confirm('Apakah Anda yakin ingin menghapus produk ini?')) {
+                    try {
+                        await deleteDoc(doc(db, `artifacts/${appId}/users/${userId}/products`, productId));
+                        showModal('Sukses', 'Produk berhasil dihapus!');
+                    } catch (error) {
+                        console.error("Error deleting product:", error);
+                        showModal('Error', 'Terjadi kesalahan saat menghapus.');
+                    }
+                }
+            }
+        });
+
+        cancelEditBtn.addEventListener('click', () => {
+            productForm.reset();
+            productIdInput.value = '';
+            optionsContainer.innerHTML = '';
+            updateFormFields(productCategorySelect.value);
+            cancelEditBtn.classList.add('hidden');
+        });
+        
+        // TESTIMONIAL CRUD OPERATIONS
+        
+        function listenForTestimonials() {
+            const testimonialsCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/testimonials`);
+            onSnapshot(query(testimonialsCollectionRef), (snapshot) => {
+                testimonialListDiv.innerHTML = '';
+                snapshot.docs.forEach(doc => {
+                    const testimonial = { id: doc.id, ...doc.data() };
+                    const div = document.createElement('div');
+                    div.className = 'relative group';
+                    div.innerHTML = `
+                        <img src="${testimonial.thumbUrl}" alt="Testimoni" class="w-full h-auto rounded-lg">
+                        <div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity space-x-2">
+                            <button data-id="${testimonial.id}" class="edit-testimonial-btn bg-yellow-500 text-white p-2 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pencil"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg></button>
+                            <button data-id="${testimonial.id}" class="delete-testimonial-btn bg-red-500 text-white p-2 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg></button>
+                        </div>
+                    `;
+                    testimonialListDiv.appendChild(div);
+                });
+            }, (error) => {
+                console.error("Error fetching testimonials:", error);
+                showModal('Error', 'Gagal memuat testimoni.');
+            });
+        }
+        
+        testimonialForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const thumbUrl = testimonialThumbUrlInput.value.trim();
+            const fullUrl = testimonialFullUrlInput.value.trim();
+
+            const testimonialData = { thumbUrl, fullUrl };
+            const testimonialId = testimonialIdInput.value;
+
+            try {
+                if (testimonialId) {
+                    await setDoc(doc(db, `artifacts/${appId}/users/${userId}/testimonials`, testimonialId), testimonialData);
+                    showModal('Sukses', 'Testimoni berhasil diperbarui!');
+                } else {
+                    await addDoc(collection(db, `artifacts/${appId}/users/${userId}/testimonials`), testimonialData);
+                    showModal('Sukses', 'Testimoni berhasil ditambahkan!');
+                }
+                testimonialForm.reset();
+                testimonialIdInput.value = '';
+                cancelTestimonialEditBtn.classList.add('hidden');
+            } catch (error) {
+                console.error("Error adding/updating testimonial:", error);
+                showModal('Error', 'Terjadi kesalahan. Coba lagi.');
+            }
+        });
+        
+        testimonialListDiv.addEventListener('click', async (event) => {
+            const target = event.target.closest('button');
+            if (!target) return;
+
+            const testimonialId = target.dataset.id;
+            
+            if (target.classList.contains('edit-testimonial-btn')) {
+                const testimonialsCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/testimonials`);
+                const snapshot = await getDocs(query(testimonialsCollectionRef));
+                const testimonialDoc = snapshot.docs.find(doc => doc.id === testimonialId);
+                if (!testimonialDoc) return;
+                const testimonial = testimonialDoc.data();
+                
+                testimonialIdInput.value = testimonialId;
+                testimonialThumbUrlInput.value = testimonial.thumbUrl;
+                testimonialFullUrlInput.value = testimonial.fullUrl;
+                cancelTestimonialEditBtn.classList.remove('hidden');
+            } else if (target.classList.contains('delete-testimonial-btn')) {
+                if (confirm('Apakah Anda yakin ingin menghapus testimoni ini?')) {
+                    try {
+                        await deleteDoc(doc(db, `artifacts/${appId}/users/${userId}/testimonials`, testimonialId));
+                        showModal('Sukses', 'Testimoni berhasil dihapus!');
+                    } catch (error) {
+                        console.error("Error deleting testimonial:", error);
+                        showModal('Error', 'Terjadi kesalahan saat menghapus.');
+                    }
+                }
+            }
+        });
+
+        cancelTestimonialEditBtn.addEventListener('click', () => {
+            testimonialForm.reset();
+            testimonialIdInput.value = '';
+            cancelTestimonialEditBtn.classList.add('hidden');
+        });
+        
+        // Initial form setup
+        updateFormFields(productCategorySelect.value);
+    </script>
+</body>
+</html>
+

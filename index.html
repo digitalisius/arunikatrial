@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JasTip Arunika</title>
+    <!-- Tailwind CSS untuk styling yang responsif dan modern -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+        .product-card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            padding: 1rem;
+            position: relative;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(255, 215, 0, 0.1), 0 4px 6px -2px rgba(255, 215, 0, 0.05);
+        }
+        
+        /* Gaya untuk modal popup */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        .modal-container {
+            background-color: #1f1f1f;
+            padding: 2rem;
+            border-radius: 1.5rem;
+            max-width: 90%;
+            width: 24rem;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            color: #e0e0e0;
+        }
+
+        /* Gaya untuk nama produk best seller */
+        .product-name-best-seller {
+            display: inline-block;
+            background-image: linear-gradient(to right, #FFD700, #B8860B);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: bold;
+            padding: 0.25rem 0.5rem;
+            border: 1px solid #FFD700;
+            border-radius: 9999px;
+            box-shadow: 0 1px 2px 0 rgba(255, 215, 0, 0.5);
+            font-size: 0.75rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: #FFD700;
+        }
+        
+        /* Gaya untuk mode list */
+        .list-view .product-list .product-card {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+        }
+        .list-view .product-card .icon-and-info {
+            display: flex;
+            align-items: center;
+            flex-grow: 1;
+            overflow: hidden;
+            flex-shrink: 1;
+        }
+        .list-view .product-card .icon-container {
+            font-size: 1.2rem;
+            margin-right: 0.5rem;
+            flex-shrink: 0;
+        }
+        .list-view .product-info {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .list-view .product-info h3 {
+            font-size: 0.875rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .list-view .product-actions-container {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .list-view .product-actions-container select {
+            width: 8rem;
+            flex-shrink: 0;
+        }
+        .list-view .product-actions-container button {
+            width: 5rem;
+            height: 2.5rem;
+            padding: 0.5rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 0.75rem;
+        }
+
+        /* Gaya untuk mode grid */
+        .grid-view .product-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .grid-view .product-card .icon-container {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        .grid-view .product-info {
+            width: 100%;
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+        .grid-view .product-actions-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .grid-view .product-actions-container select {
+            width: 100%;
+            max-width: 12rem;
+        }
+        .grid-view .product-actions-container button {
+            width: 100%;
+            max-width: 12rem;
+            padding: 0.5rem 1rem;
+        }
+        #main-title {
+            font-family: 'Cinzel', serif;
+            font-size: 3rem;
+            color: #FFD700;
+        }
+        
+        /* Gaya untuk tombol dan tab golden-black yang baru */
+        .golden-btn {
+            background-color: #1a1a1a;
+            color: #FFD700;
+            border: 1px solid #FFD700;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 2px 5px rgba(255, 215, 0, 0.2);
+        }
+        .golden-btn:hover {
+            background-image: linear-gradient(to right, #B8860B, #FFD700);
+            color: #1a1a1a;
+            box-shadow: 0 4px 10px rgba(255, 215, 0, 0.4);
+            border: none;
+        }
+        .tab-btn, .sub-tab-btn {
+            background-color: #2a2a2a;
+            color: #FFD700;
+            transition: all 0.2s ease-in-out;
+        }
+        .tab-btn.active, .sub-tab-btn.active, .tab-btn:hover, .sub-tab-btn:hover {
+            background-image: linear-gradient(to right, #B8860B, #FFD700);
+            box-shadow: 0 4px 6px -1px rgba(255, 215, 0, 0.1), 0 2px 4px -1px rgba(255, 215, 0, 0.05);
+            color: #1a1a1a;
+        }
+
+        .small-golden-btn {
+            font-size: 0.75rem; /* text-xs */
+            padding: 0.5rem 0.75rem; /* py-2 px-3 */
+        }
+
+        /* Gaya untuk grid testimoni */
+        .testimonial-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 1rem;
+        }
+        .testimonial-img {
+            cursor: pointer;
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 0.5rem;
+            transition: transform 0.2s ease-in-out;
+        }
+        .testimonial-img:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
+        }
+        .modal-image {
+            max-width: 100%;
+            max-height: 80vh;
+            border-radius: 0.5rem;
+        }
+
+        .shopee-btn {
+            background-color: #FF5722;
+            color: white;
+            padding: 0.5rem 1rem;
+            font-size: 0.75rem;
+            font-weight: bold;
+            border-radius: 9999px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.25rem;
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+        .shopee-btn:hover {
+            background-color: #E64A19;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-200 p-4 md:p-8">
+
+    <!-- Kontainer utama dengan desain modern -->
+    <div class="max-w-4xl mx-auto bg-gray-800 p-6 md:p-10 rounded-3xl shadow-2xl">
+
+        <!-- Header toko -->
+        <header class="text-center mb-6">
+            <h1 id="main-title" class="font-extrabold text-gray-200 mb-2 tracking-tight">JasTip Arunika</h1>
+            <p class="text-lg text-gray-400">Melayani Titipan Anda dengan Sepenuh Hati</p>
+        </header>
+
+        <!-- Kontainer untuk daftar produk -->
+        <div id="product-list-container">
+
+            <!-- Tombol untuk mengubah tampilan -->
+            <div class="flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-4">
+                <div class="flex space-x-2 w-full sm:w-auto">
+                    <button id="how-to-order-btn" class="golden-btn small-golden-btn flex-1 sm:flex-initial py-2 px-4 font-medium rounded-lg hover:bg-opacity-80 transition-colors">
+                        Cara Pesan
+                    </button>
+                    <button id="best-seller-info-btn" class="golden-btn small-golden-btn flex-1 sm:flex-initial py-2 px-4 font-medium rounded-lg hover:bg-opacity-80 transition-colors">
+                        Info Best Seller
+                    </button>
+                    <button id="testimonial-btn" class="golden-btn small-golden-btn flex-1 sm:flex-initial py-2 px-4 font-medium rounded-lg hover:bg-opacity-80 transition-colors">
+                        Testimoni
+                    </button>
+                </div>
+                <div class="flex space-x-2 mt-4 sm:mt-0">
+                    <button id="grid-view-btn" class="p-2 rounded-lg bg-gray-700 text-gray-200 hover:bg-gray-600 transition-colors">
+                        <!-- Grid Icon -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-layout-grid"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></svg>
+                    </button>
+                    <button id="list-view-btn" class="p-2 rounded-lg bg-gray-700 text-gray-200 hover:bg-gray-600 transition-colors">
+                        <!-- List Icon -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-list"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Input Pencarian Barang Baru Ditambahkan -->
+            <div class="relative mb-4">
+                <input type="text" id="search-input" placeholder="Cari kopi, makanan, atau minuman..." class="w-full bg-gray-700 text-gray-200 border border-gray-600 rounded-lg p-3 pl-10 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search text-gray-400"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                </div>
+            </div>
+
+            <!-- Pesan untuk hasil pencarian -->
+            <p id="search-results-message" class="text-sm text-center text-gray-500 mb-4 hidden"></p>
+
+            <!-- Tab Kategori Utama, disembunyikan saat pencarian aktif -->
+            <div id="main-tabs" class="flex space-x-2 mb-4 p-1 bg-gray-900 rounded-xl">
+                <button id="tab-kopi" class="tab-btn active py-2 px-4 rounded-lg font-medium transition-colors duration-200 flex-1 text-center">Kopi</button>
+                <button id="tab-makanan" class="tab-btn py-2 px-4 rounded-lg font-medium transition-colors duration-200 flex-1 text-center">Makanan</button>
+                <button id="tab-minuman" class="tab-btn py-2 px-4 rounded-lg font-medium transition-colors duration-200 flex-1 text-center">Minuman</button>
+            </div>
+
+            <!-- Konten Tab, disembunyikan saat pencarian aktif -->
+            <div id="tab-content">
+                <!-- Konten Kopi -->
+                <div id="content-kopi" class="tab-pane">
+                    <!-- Sub-tab Kopi -->
+                    <div class="flex space-x-2 mb-4 p-1 bg-gray-900 rounded-xl">
+                        <button id="sub-tab-arabika" class="sub-tab-btn active py-2 px-4 rounded-lg font-medium text-gray-200 transition-colors duration-200 flex-1 text-center">Arabika</button>
+                        <button id="sub-tab-robusta" class="sub-tab-btn py-2 px-4 rounded-lg font-medium text-gray-200 transition-colors duration-200 flex-1 text-center">Robusta</button>
+                    </div>
+                    
+                    <div id="sub-tab-content">
+                        <section id="arabika-section" class="sub-tab-pane">
+                            <h2 class="text-2xl font-bold mb-4 text-gray-200">Arabika</h2>
+                            <div id="arabika-list" class="product-list grid-view grid grid-cols-2 lg:grid-cols-3 gap-4">
+                                <!-- Produk Arabika akan dimuat di sini -->
+                            </div>
+                        </section>
+                        <section id="robusta-section" class="sub-tab-pane hidden">
+                            <h2 class="text-2xl font-bold mb-4 text-gray-200">Robusta</h2>
+                            <div id="robusta-list" class="product-list grid-view grid grid-cols-2 lg:grid-cols-3 gap-4">
+                                <!-- Produk Robusta akan dimuat di sini -->
+                            </div>
+                        </section>
+                    </div>
+                </div>
+
+                <!-- Konten Makanan -->
+                <div id="content-makanan" class="tab-pane hidden">
+                    <section class="mb-8">
+                        <h2 class="text-2xl font-bold mb-4 text-gray-200">Makanan</h2>
+                        <div id="makanan-list" class="product-list grid-view grid grid-cols-2 lg:grid-cols-3 gap-4">
+                            <!-- Produk Makanan akan dimuat di sini -->
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Konten Minuman -->
+                <div id="content-minuman" class="tab-pane hidden">
+                    <section class="mb-8">
+                        <h2 class="text-2xl font-bold mb-4 text-gray-200">Minuman</h2>
+                        <div id="minuman-list" class="product-list grid-view grid grid-cols-2 lg:grid-cols-3 gap-4">
+                            <!-- Produk Minuman akan dimuat di sini -->
+                        </div>
+                    </section>
+                </div>
+            </div>
+            
+            <!-- Kontainer untuk hasil pencarian -->
+            <div id="search-results-container" class="hidden">
+                <div id="search-results-list" class="product-list grid-view grid grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Hasil pencarian akan dimuat di sini -->
+                </div>
+            </div>
+            <!-- Loading indicator -->
+            <p id="loading-message" class="text-center text-gray-500 my-8">Memuat produk...</p>
+
+        </div>
+
+        <!-- Garis pemisah -->
+        <hr class="my-10 border-t border-gray-700">
+
+        <!-- Keranjang Belanja -->
+        <div>
+            <h2 class="text-2xl font-bold text-gray-200 mb-4">Keranjang Anda</h2>
+            <div id="cart-items" class="space-y-4 mb-4">
+                <p id="empty-cart-message" class="text-gray-500 italic text-center p-4">Keranjang masih kosong.</p>
+            </div>
+            <div class="flex justify-between items-center font-bold text-xl text-gray-200 border-t border-gray-700 pt-4">
+                <span>Total:</span>
+                <span id="cart-total">Rp0</span>
+            </div>
+
+            <!-- Tombol Pesan via WhatsApp -->
+            <button id="checkout-button" class="w-full mt-6 py-4 px-6 bg-green-600 hover:bg-green-700 text-white font-bold text-lg rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-green-600 focus:ring-opacity-50" style="display: none;">
+                Pesan Sekarang via WhatsApp
+            </button>
+        </div>
+        
+        <!-- Garis pemisah -->
+        <hr class="my-10 border-t border-gray-700">
+
+        <!-- Formulir Saran Barang -->
+        <section id="suggestion-form-section" class="mb-8 p-6 bg-gray-900 rounded-lg">
+            <h2 class="text-2xl font-bold text-gray-200 mb-4">Saran Barang & Estimasi Harga</h2>
+            <p class="text-gray-400 mb-4 text-sm">Punya saran barang lain yang ingin Anda titipkan? Sampaikan di sini!</p>
+            <div class="flex flex-col space-y-4">
+                <input type="text" id="suggestion-item-name" placeholder="Nama Barang (contoh: Kopi Arabika Gayo)" class="bg-gray-700 text-gray-200 border border-gray-600 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                <input type="number" id="suggestion-item-price" placeholder="Harga perkiraan (contoh: 50000)" class="bg-gray-700 text-gray-200 border border-gray-600 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                <button id="send-suggestion-btn" class="golden-btn w-full py-3 font-bold rounded-lg transition-colors duration-200">
+                    Kirim Saran via WhatsApp
+                </button>
+            </div>
+        </section>
+
+        <!-- Garis pemisah -->
+        <hr class="my-10 border-t border-gray-700">
+
+        <!-- Testimoni Section -->
+        <section id="testimonial-section" class="mb-8 scroll-mt-20">
+            <h2 class="text-2xl font-bold text-gray-200 mb-4">Testimoni</h2>
+            <div id="testimonial-grid" class="testimonial-grid p-4 bg-gray-900 rounded-lg">
+                <!-- Gambar testimoni akan dimuat di sini -->
+            </div>
+            <!-- Loading indicator testimoni -->
+            <p id="testimonial-loading-message" class="text-center text-gray-500 mt-4">Memuat testimoni...</p>
+        </section>
+
+    </div>
+
+    <!-- Modal Konfirmasi Produk -->
+    <div id="confirmation-modal" class="modal-overlay hidden">
+        <div class="modal-container">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="modal-title" class="text-lg font-semibold text-gray-200">Konfirmasi</h3>
+                <button id="close-confirmation-modal-btn" class="text-gray-400 hover:text-gray-200 focus:outline-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+            </div>
+            <p id="modal-message" class="text-gray-400 mb-6">Apakah Anda yakin ingin menambahkan produk ini?</p>
+            <div id="modal-actions" class="flex justify-center space-x-4">
+                <button id="yes-btn" class="py-2 px-6 bg-green-500 hover:bg-green-600 text-white font-bold rounded-lg transition-colors">Ya</button>
+                <button id="no-btn" class="py-2 px-6 bg-gray-600 hover:bg-gray-500 text-gray-200 font-bold rounded-lg transition-colors">Tidak</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Cara Pesan -->
+    <div id="how-to-order-modal" class="modal-overlay hidden">
+        <div class="modal-container">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-200">Cara Pesan</h3>
+                <button id="close-how-to-order-modal-btn" class="text-gray-400 hover:text-gray-200 focus:outline-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+            </div>
+            <div class="text-left text-gray-400">
+                <p class="mb-2 text-sm font-medium">Langkah-langkah mudah untuk memesan:</p>
+                <ol class="list-decimal list-inside space-y-1 text-sm">
+                    <li>Pilih produk & ukuran.</li>
+                    <li>Klik "+ 𝙏𝙖𝙢𝙗𝙖𝙝" untuk menambahkannya ke keranjang.</li>
+                    <li>Selesai belanja, klik "𝙋𝙚𝙨𝙖𝙣 𝙎𝙚𝙠𝙖𝙧𝙖𝙣𝙜 𝙑𝙖 𝙒𝙝𝙖𝙩𝙨𝙖𝙥𝙥".</li>
+                    <li>Pesan pesanan Anda sudah terisi otomatis, tinggal kirim.</li>
+                </ol>
+            </div>
+            <div class="mt-6">
+                <button id="ok-how-to-order-btn" class="py-2 px-6 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-lg transition-colors">Ok</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Info Best Seller -->
+    <div id="best-seller-info-modal" class="modal-overlay hidden">
+        <div class="modal-container">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-200">Info Best Seller</h3>
+                <button id="close-best-seller-info-modal-btn" class="text-gray-400 hover:text-gray-200 focus:outline-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+            </div>
+            <div class="text-left text-gray-400">
+                <p class="mb-4 text-sm">Produk dengan nama yang diberi warna seperti ini:</p>
+                <div class="flex items-center justify-center mb-4">
+                    <h3 class="font-semibold text-sm product-name-best-seller px-4 py-1">Nama Produk</h3>
+                </div>
+                <p class="text-sm">menandakan bahwa produk tersebut adalah "𝙋𝙧𝙤𝙙𝙪𝙠 𝙏𝙚𝙧𝙡𝙖𝙧𝙞𝙨" kami.</p>
+            </div>
+            <div class="mt-6">
+                <button id="ok-best-seller-info-btn" class="py-2 px-6 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-lg transition-colors">Ok</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Gambar Testimoni Penuh -->
+    <div id="image-modal" class="modal-overlay hidden">
+        <div class="relative max-w-4xl p-4">
+            <button id="close-image-modal-btn" class="absolute top-2 right-2 text-white bg-gray-900 bg-opacity-50 hover:bg-opacity-75 rounded-full p-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+            <img id="full-image" class="modal-image" src="" alt="Gambar Testimoni Penuh">
+        </div>
+    </div>
+
+    <!-- Footer dengan Copyright -->
+    <footer class="mt-8 text-center text-gray-500 text-sm">
+        <p>Copyright &copy; by Arunika Group 2025</p>
+    </footer>
+
+    <!-- Script Firebase -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global variables provided by the Canvas environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        let userId;
+
+        // Sign in anonymously or with a custom token
+        const signIn = async () => {
+            try {
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                userId = auth.currentUser.uid;
+                console.log("Firebase signed in successfully. User ID:", userId);
+                // Call render functions after authentication is complete
+                listenForProducts();
+                listenForTestimonials();
+            } catch (error) {
+                console.error("Error signing in to Firebase:", error);
+                document.getElementById('loading-message').textContent = 'Gagal memuat data. Silakan coba lagi nanti.';
+                document.getElementById('testimonial-loading-message').textContent = '';
+            }
+        };
+        signIn();
+
+        // Object untuk menyimpan data produk dari Firestore
+        let products = {
+            kopi: { arabika: [], robusta: [] },
+            makanan: [],
+            minuman: []
+        };
+        
+        let testimonials = [];
+
+        const whatsappNumber = '6285640312607';
+        const titipFee = 25000;
+
+        // References to DOM elements
+        const arabikaListDiv = document.getElementById('arabika-list');
+        const robustaListDiv = document.getElementById('robusta-list');
+        const makananListDiv = document.getElementById('makanan-list');
+        const minumanListDiv = document.getElementById('minuman-list');
+        const cartItemsDiv = document.getElementById('cart-items');
+        const cartTotalSpan = document.getElementById('cart-total');
+        const checkoutButton = document.getElementById('checkout-button');
+        const emptyCartMessage = document.getElementById('empty-cart-message');
+        const gridViewBtn = document.getElementById('grid-view-btn');
+        const listViewBtn = document.getElementById('list-view-btn');
+        const howToOrderBtn = document.getElementById('how-to-order-btn');
+        const bestSellerInfoBtn = document.getElementById('best-seller-info-btn');
+        const testimonialBtn = document.getElementById('testimonial-btn');
+        const testimonialGrid = document.getElementById('testimonial-grid');
+        const imageModal = document.getElementById('image-modal');
+        const closeImageModalBtn = document.getElementById('close-image-modal-btn');
+        const fullImage = document.getElementById('full-image');
+        const suggestionItemNameInput = document.getElementById('suggestion-item-name');
+        const suggestionItemPriceInput = document.getElementById('suggestion-item-price');
+        const sendSuggestionBtn = document.getElementById('send-suggestion-btn');
+        const searchInput = document.getElementById('search-input');
+        const mainTabs = document.getElementById('main-tabs');
+        const tabContent = document.getElementById('tab-content');
+        const searchResultsContainer = document.getElementById('search-results-container');
+        const searchResultsList = document.getElementById('search-results-list');
+        const searchResultsMessage = document.getElementById('search-results-message');
+        const loadingMessage = document.getElementById('loading-message');
+        const testimonialLoadingMessage = document.getElementById('testimonial-loading-message');
+
+        let cart = {};
+        
+        // Fungsi untuk mengambil data produk dari Firestore secara real-time
+        function listenForProducts() {
+            // Gunakan `onSnapshot` untuk mendapatkan update real-time
+            const productsCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/products`);
+            onSnapshot(query(productsCollectionRef), (snapshot) => {
+                const fetchedProducts = {
+                    kopi: { arabika: [], robusta: [] },
+                    makanan: [],
+                    minuman: []
+                };
+
+                snapshot.docs.forEach(doc => {
+                    const data = { id: doc.id, ...doc.data() };
+                    const category = data.category.toLowerCase();
+                    const subCategory = data.subCategory ? data.subCategory.toLowerCase() : null;
+                    
+                    if (category === 'kopi' && subCategory) {
+                        fetchedProducts[category][subCategory].push(data);
+                    } else if (category === 'makanan') {
+                        fetchedProducts[category].push(data);
+                    } else if (category === 'minuman') {
+                        fetchedProducts[category].push(data);
+                    }
+                });
+
+                products = fetchedProducts;
+                loadingMessage.classList.add('hidden');
+                console.log("Products loaded from Firestore:", products);
+
+                // Re-render tampilan setelah data baru diterima
+                const activeTabId = document.querySelector('.tab-btn.active').id;
+                const category = activeTabId.split('-')[1];
+                let subCategory = null;
+                if (category === 'kopi') {
+                    const activeSubTab = document.querySelector('.sub-tab-btn.active');
+                    subCategory = activeSubTab ? activeSubTab.id.split('-')[2] : 'arabika';
+                }
+                renderProducts(category, subCategory);
+            }, (error) => {
+                console.error("Error fetching products:", error);
+                loadingMessage.textContent = 'Gagal memuat produk. Silakan coba lagi.';
+            });
+        }
+        
+        // Fungsi untuk mengambil data testimoni dari Firestore
+        function listenForTestimonials() {
+            const testimonialsCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/testimonials`);
+            onSnapshot(query(testimonialsCollectionRef), (snapshot) => {
+                testimonials = [];
+                snapshot.docs.forEach(doc => {
+                    testimonials.push({ id: doc.id, ...doc.data() });
+                });
+                testimonialLoadingMessage.classList.add('hidden');
+                console.log("Testimonials loaded from Firestore:", testimonials);
+                renderTestimonials();
+            }, (error) => {
+                console.error("Error fetching testimonials:", error);
+                testimonialLoadingMessage.textContent = 'Gagal memuat testimoni.';
+            });
+        }
+        
+        // Fungsi untuk menampilkan pop-up konfirmasi
+        function showConfirmationModal(productName, productId, selectedOptionId = null) {
+            const modal = document.getElementById('confirmation-modal');
+            const modalMessage = document.getElementById('modal-message');
+            const yesBtn = document.getElementById('yes-btn');
+            const noBtn = document.getElementById('no-btn');
+
+            let fullProductName = productName;
+            if (selectedOptionId) {
+                const allProducts = Object.values(products).flatMap(cat => Array.isArray(cat) ? cat : Object.values(cat).flatMap(subCat => subCat));
+                const product = allProducts.find(p => p.id === productId);
+                const option = product.options.find(o => o.id === selectedOptionId);
+                fullProductName = `${productName} (${option.name})`;
+            }
+
+            modalMessage.innerHTML = `Apakah Anda yakin ingin menambahkan <strong>${fullProductName}</strong> ke keranjang?`;
+            yesBtn.onclick = () => {
+                if (selectedOptionId) {
+                    addItemToCart(productId, selectedOptionId);
+                } else {
+                    addItemToCart(productId);
+                }
+                
+                modalMessage.innerHTML = `<strong>${fullProductName}</strong> berhasil ditambahkan ke keranjang!`;
+                yesBtn.classList.add('hidden');
+                noBtn.textContent = 'Ok';
+                noBtn.onclick = () => {
+                    modal.classList.add('hidden');
+                    resetConfirmationModal();
+                };
+            };
+            noBtn.onclick = () => {
+                modal.classList.add('hidden');
+                resetConfirmationModal();
+            };
+            modal.classList.remove('hidden');
+        }
+
+        function resetConfirmationModal() {
+            const modal = document.getElementById('confirmation-modal');
+            const yesBtn = document.getElementById('yes-btn');
+            const noBtn = document.getElementById('no-btn');
+            yesBtn.classList.remove('hidden');
+            noBtn.textContent = 'Tidak';
+            yesBtn.onclick = null;
+            noBtn.onclick = null;
+            modal.classList.add('hidden');
+        }
+
+        // Fungsi untuk menampilkan pop-up cara pesan
+        function showHowToOrderModal() {
+            const modal = document.getElementById('how-to-order-modal');
+            modal.classList.remove('hidden');
+        }
+
+        // Fungsi untuk menampilkan pop-up info best seller
+        function showBestSellerInfoModal() {
+            const modal = document.getElementById('best-seller-info-modal');
+            modal.classList.remove('hidden');
+        }
+
+
+        document.getElementById('close-confirmation-modal-btn').addEventListener('click', resetConfirmationModal);
+        document.getElementById('close-how-to-order-modal-btn').addEventListener('click', () => {
+            document.getElementById('how-to-order-modal').classList.add('hidden');
+        });
+        document.getElementById('ok-how-to-order-btn').addEventListener('click', () => {
+            document.getElementById('how-to-order-modal').classList.add('hidden');
+        });
+        document.getElementById('close-best-seller-info-modal-btn').addEventListener('click', () => {
+            document.getElementById('best-seller-info-modal').classList.add('hidden');
+        });
+        document.getElementById('ok-best-seller-info-btn').addEventListener('click', () => {
+            document.getElementById('best-seller-info-modal').classList.add('hidden');
+        });
+
+        function getCategorySymbol(category) {
+            switch(category) {
+                case 'Kopi': return '☕';
+                case 'Makanan': return '🍔';
+                case 'Minuman': return '🥤';
+                default: return '';
+            }
+        }
+
+        function createProductCard(product) {
+            const productElement = document.createElement('div');
+            productElement.className = 'product-card bg-gray-700 rounded-xl shadow-md border border-gray-600 text-center';
+
+            let productNameClass = '';
+            if (product.isBestSeller) {
+                productNameClass = 'product-name-best-seller';
+            }
+
+            let productActionsHtml = '';
+            if (product.options && product.options.length > 0) {
+                let optionsHtml = product.options.map(option =>
+                    `<option value="${option.id}">${option.name} - Rp${option.price.toLocaleString('id-ID')}</option>`
+                ).join('');
+
+                productActionsHtml = `
+                    <div class="product-actions-container flex flex-col md:flex-row items-center gap-2 w-full mt-2">
+                        <select id="select-${product.id}" class="w-full text-sm bg-gray-600 border-gray-500 text-gray-200 rounded-lg p-2 focus:ring-amber-500 focus:border-amber-500">
+                            ${optionsHtml}
+                        </select>
+                        <button data-id="${product.id}" class="add-to-cart-btn-multi flex-shrink-0 bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 text-sm rounded-full transition-colors duration-200 shadow-md">
+                            + Tambah
+                        </button>
+                    </div>
+                `;
+            } else {
+                const priceHtml = product.price ? `<p class="text-amber-500 font-bold text-xs sm:text-sm">Rp${product.price.toLocaleString('id-ID')}</p>` : '';
+                const shopeeBtnHtml = product.shopeeLink ? `<a href="${product.shopeeLink}" target="_blank" class="shopee-btn"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shopping-bag"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4H6z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>Beli di Shopee</a>` : '';
+                
+                // Jika tidak ada options, tampilkan tombol tambah single item
+                productActionsHtml = `
+                    <div class="product-actions-container flex flex-col items-center gap-2 w-full mt-2">
+                        ${priceHtml}
+                        <button data-id="${product.id}" class="add-to-cart-btn-single flex-shrink-0 bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 text-sm rounded-full transition-colors duration-200 shadow-md">
+                            + Tambah
+                        </button>
+                        ${shopeeBtnHtml}
+                    </div>
+                `;
+            }
+
+            productElement.innerHTML = `
+                <div class="relative w-full flex flex-col items-center">
+                    <div class="icon-container mb-2 text-2xl text-amber-500">
+                        ${getCategorySymbol(product.category)}
+                    </div>
+                    <div class="product-info flex-1 w-full truncate mb-2">
+                        <h3 class="font-semibold text-sm sm:text-base text-gray-200 truncate ${productNameClass}">${product.name}</h3>
+                    </div>
+                </div>
+                <div class="product-actions-wrapper w-full">
+                    ${productActionsHtml}
+                </div>
+            `;
+            return productElement;
+        }
+
+        // Fungsi untuk merender produk di tab yang dipilih
+        function renderProducts(category, subCategory = null) {
+            arabikaListDiv.innerHTML = '';
+            robustaListDiv.innerHTML = '';
+            makananListDiv.innerHTML = '';
+            minumanListDiv.innerHTML = '';
+            
+            const productsToRender = [];
+            if (category === 'kopi') {
+                if (subCategory === 'arabika') {
+                    productsToRender.push(...products.kopi.arabika);
+                } else if (subCategory === 'robusta') {
+                    productsToRender.push(...products.kopi.robusta);
+                }
+            } else if (category === 'makanan') {
+                productsToRender.push(...products.makanan);
+            } else if (category === 'minuman') {
+                productsToRender.push(...products.minuman);
+            }
+
+            productsToRender.forEach(product => {
+                const productCard = createProductCard(product);
+                if (category === 'kopi' && subCategory === 'arabika') {
+                    arabikaListDiv.appendChild(productCard);
+                } else if (category === 'kopi' && subCategory === 'robusta') {
+                    robustaListDiv.appendChild(productCard);
+                } else if (category === 'makanan') {
+                    makananListDiv.appendChild(productCard);
+                } else if (category === 'minuman') {
+                    minumanListDiv.appendChild(productCard);
+                }
+            });
+            
+            const activeView = document.querySelector('.product-list.list-view') ? 'list' : 'grid';
+            setView(activeView);
+        }
+
+        // Fungsi baru untuk memfilter dan merender produk berdasarkan pencarian
+        function filterProducts(query) {
+            const lowerCaseQuery = query.toLowerCase();
+            mainTabs.classList.add('hidden');
+            tabContent.classList.add('hidden');
+            searchResultsContainer.classList.remove('hidden');
+            searchResultsList.innerHTML = '';
+
+            const allProducts = Object.values(products).flatMap(cat => Array.isArray(cat) ? cat : Object.values(cat).flatMap(subCat => subCat));
+            const filteredProducts = allProducts.filter(product => {
+                const productName = product.name.toLowerCase();
+                return productName.includes(lowerCaseQuery);
+            });
+
+            if (filteredProducts.length > 0) {
+                searchResultsMessage.textContent = `${filteredProducts.length} produk ditemukan.`;
+                searchResultsMessage.classList.remove('hidden');
+                filteredProducts.forEach(product => {
+                    searchResultsList.appendChild(createProductCard(product));
+                });
+            } else {
+                searchResultsMessage.textContent = `Tidak ada produk yang cocok dengan pencarian Anda.`;
+                searchResultsMessage.classList.remove('hidden');
+            }
+            setView(document.querySelector('.product-list.list-view') ? 'list' : 'grid');
+        }
+
+        function renderCart() {
+            cartItemsDiv.innerHTML = '';
+            let total = 0;
+            let hasItems = false;
+
+            for (const id in cart) {
+                hasItems = true;
+                const item = cart[id];
+                total += item.price * item.quantity;
+
+                const cartItemElement = document.createElement('div');
+                cartItemElement.className = 'flex justify-between items-center p-3 bg-gray-700 rounded-lg shadow-sm';
+                cartItemElement.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <button data-id="${id}" class="remove-from-cart-btn bg-red-500 hover:bg-red-600 text-white w-6 h-6 rounded-full text-sm font-bold flex items-center justify-center">-</button>
+                        <span>${item.quantity}x ${item.name}</span>
+                    </div>
+                    <span class="font-semibold text-amber-500">Rp${(item.price * item.quantity).toLocaleString('id-ID')}</span>
+                `;
+                cartItemsDiv.appendChild(cartItemElement);
+            }
+            
+            if (hasItems) {
+                total += titipFee;
+                const titipFeeElement = document.createElement('div');
+                titipFeeElement.className = 'flex justify-between items-center p-3 bg-gray-700 rounded-lg shadow-sm font-bold text-gray-200';
+                titipFeeElement.innerHTML = `
+                    <span>Jasa Titip:</span>
+                    <span class="text-amber-500">Rp${titipFee.toLocaleString('id-ID')}</span>
+                `;
+                cartItemsDiv.appendChild(titipFeeElement);
+            }
+
+            if (hasItems) {
+                emptyCartMessage.style.display = 'none';
+                checkoutButton.style.display = 'block';
+            } else {
+                emptyCartMessage.style.display = 'block';
+                checkoutButton.style.display = 'none';
+            }
+
+            cartTotalSpan.textContent = `Rp${total.toLocaleString('id-ID')}`;
+        }
+
+        function addItemToCart(productId, selectedOptionId = null) {
+            const allProducts = Object.values(products).flatMap(cat => Array.isArray(cat) ? cat : Object.values(cat).flatMap(subCat => subCat));
+            let productWithVariants = allProducts.find(p => p.id === productId);
+            let itemToAdd;
+            let cartItemId;
+
+            if (productWithVariants.options) {
+                let selectedOption = productWithVariants.options.find(o => o.id === selectedOptionId);
+                if (!selectedOption) return;
+
+                cartItemId = selectedOptionId;
+                itemToAdd = {
+                    id: cartItemId,
+                    name: `${productWithVariants.name} (${selectedOption.name})`,
+                    price: selectedOption.price
+                };
+            } else {
+                cartItemId = productId;
+                itemToAdd = productWithVariants;
+            }
+
+            if (cart[cartItemId]) {
+                cart[cartItemId].quantity++;
+            } else {
+                cart[cartItemId] = { ...itemToAdd, quantity: 1 };
+            }
+
+            renderCart();
+        }
+
+        document.addEventListener('click', (event) => {
+            const target = event.target;
+            if (target.classList.contains('add-to-cart-btn-multi')) {
+                const productId = target.dataset.id;
+                const selectElement = document.getElementById(`select-${productId}`);
+                const selectedOptionId = selectElement.value;
+                const allProducts = Object.values(products).flatMap(cat => Array.isArray(cat) ? cat : Object.values(cat).flatMap(subCat => subCat));
+                let product = allProducts.find(p => p.id === productId);
+                showConfirmationModal(product.name, productId, selectedOptionId);
+            } else if (target.classList.contains('add-to-cart-btn-single')) {
+                const productId = target.dataset.id;
+                const allProducts = Object.values(products).flatMap(cat => Array.isArray(cat) ? cat : Object.values(cat).flatMap(subCat => subCat));
+                let product = allProducts.find(p => p.id === productId);
+                showConfirmationModal(product.name, productId);
+            }
+        });
+
+        cartItemsDiv.addEventListener('click', (event) => {
+            const target = event.target;
+            if (target.classList.contains('remove-from-cart-btn')) {
+                const productId = target.dataset.id;
+                if (cart[productId]) {
+                    if (cart[productId].quantity > 1) {
+                        cart[productId].quantity--;
+                    } else {
+                        delete cart[productId];
+                    }
+                }
+                renderCart();
+            }
+        });
+
+        checkoutButton.addEventListener('click', () => {
+            let orderDetails = 'Halo JasTip Arunika, saya ingin memesan:\n\n';
+            let total = 0;
+            let hasItems = false;
+            for (const id in cart) {
+                hasItems = true;
+                const item = cart[id];
+                orderDetails += `${item.quantity}x ${item.name} - Rp${(item.price * item.quantity).toLocaleString('id-ID')}\n`;
+                total += item.price * item.quantity;
+            }
+            
+            if (hasItems) {
+                total += titipFee;
+                orderDetails += `\nBiaya Jasa Titip: Rp${titipFee.toLocaleString('id-ID')}\n`;
+            }
+
+            orderDetails += `\nTotal Pembayaran: Rp${total.toLocaleString('id-ID')}\n\nMohon konfirmasinya. Terima kasih!`;
+
+            const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(orderDetails)}`;
+            window.open(whatsappUrl, '_blank');
+        });
+
+        // Event listener untuk tombol kirim saran
+        sendSuggestionBtn.addEventListener('click', () => {
+            const itemName = suggestionItemNameInput.value;
+            const itemPrice = suggestionItemPriceInput.value;
+            let message = `Halo JasTip Arunika, saya punya saran barang:\n\n`;
+
+            if (itemName) {
+                message += `Nama Barang: ${itemName}\n`;
+            }
+            if (itemPrice) {
+                message += `Estimasi Harga: Rp${new Intl.NumberFormat('id-ID').format(itemPrice)}\n`;
+            }
+            
+            if (itemName || itemPrice) {
+                const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+                window.open(whatsappUrl, '_blank');
+                suggestionItemNameInput.value = '';
+                suggestionItemPriceInput.value = '';
+            } else {
+                showInfoModal('Info', 'Harap isi nama barang atau estimasi harga terlebih dahulu.');
+            }
+        });
+        
+        function showInfoModal(title, message) {
+            const modal = document.getElementById('confirmation-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalMessage = document.getElementById('modal-message');
+            const yesBtn = document.getElementById('yes-btn');
+            const noBtn = document.getElementById('no-btn');
+
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            yesBtn.classList.add('hidden');
+            noBtn.textContent = 'Ok';
+            noBtn.onclick = () => {
+                modal.classList.add('hidden');
+                resetConfirmationModal();
+            };
+            modal.classList.remove('hidden');
+        }
+
+        function setView(view) {
+            const productLists = document.querySelectorAll('.product-list');
+            productLists.forEach(list => {
+                list.classList.remove('list-view', 'grid-view', 'flex', 'flex-col', 'space-y-4', 'grid', 'grid-cols-2', 'lg:grid-cols-3', 'gap-4');
+                if (view === 'grid') {
+                    list.classList.add('grid', 'grid-cols-2', 'lg:grid-cols-3', 'gap-4', 'grid-view');
+                } else if (view === 'list') {
+                    list.classList.add('flex', 'flex-col', 'space-y-4', 'list-view');
+                }
+            });
+        }
+
+        // Tab logic
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        const subTabButtons = document.querySelectorAll('.sub-tab-btn');
+        const tabPanes = document.querySelectorAll('.tab-pane');
+        const subTabPanes = document.querySelectorAll('.sub-tab-pane');
+
+        // Fungsi untuk mengaktifkan tab sesuai kategori
+        function activateCategoryTab(category) {
+            tabButtons.forEach(b => b.classList.remove('active'));
+            const targetTab = document.getElementById(`tab-${category}`);
+            if (targetTab) {
+                targetTab.classList.add('active');
+            }
+            tabPanes.forEach(p => p.classList.add('hidden'));
+            const targetPane = document.getElementById(`content-${category}`);
+            if (targetPane) {
+                targetPane.classList.remove('hidden');
+            }
+        }
+
+        // Event listener untuk tab utama
+        tabButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                searchInput.value = '';
+                searchResultsContainer.classList.add('hidden');
+                searchResultsMessage.classList.add('hidden');
+                mainTabs.classList.remove('hidden');
+                tabContent.classList.remove('hidden');
+                
+                activateCategoryTab(btn.id.split('-')[1]);
+
+                if (btn.id === 'tab-kopi') {
+                    document.getElementById('sub-tab-content').classList.remove('hidden');
+                    const activeSubTab = document.querySelector('.sub-tab-btn.active');
+                    const activeSubTabId = activeSubTab ? activeSubTab.id.split('-')[2] : 'arabika';
+                    renderProducts('kopi', activeSubTabId);
+                } else {
+                    document.getElementById('sub-tab-content').classList.add('hidden');
+                    renderProducts(btn.id.split('-')[1]);
+                }
+            });
+        });
+
+        // Event listener untuk sub-tab
+        subTabButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                subTabButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                subTabPanes.forEach(pane => pane.classList.add('hidden'));
+                const targetPaneId = btn.id.split('-')[2] + '-section';
+                document.getElementById(targetPaneId).classList.remove('hidden');
+                
+                const subCategoryId = btn.id.split('-')[2];
+                renderProducts('kopi', subCategoryId);
+            });
+        });
+
+        // Event listener untuk input pencarian
+        searchInput.addEventListener('input', (event) => {
+            const query = event.target.value.trim();
+            if (query.length > 0) {
+                filterProducts(query);
+            } else {
+                searchResultsContainer.classList.add('hidden');
+                searchResultsMessage.classList.add('hidden');
+                mainTabs.classList.remove('hidden');
+                tabContent.classList.remove('hidden');
+                const activeTabId = document.querySelector('.tab-btn.active').id;
+                const category = activeTabId.split('-')[1];
+                let subCategory = null;
+                if (category === 'kopi') {
+                    const activeSubTab = document.querySelector('.sub-tab-btn.active');
+                    subCategory = activeSubTab ? activeSubTab.id.split('-')[2] : 'arabika';
+                }
+                renderProducts(category, subCategory);
+            }
+        });
+
+        // Fungsi untuk merender gambar testimoni
+        function renderTestimonials() {
+            testimonialGrid.innerHTML = '';
+            testimonials.forEach(testimoni => {
+                const imgElement = document.createElement('img');
+                imgElement.className = 'testimonial-img';
+                imgElement.src = testimoni.thumbUrl;
+                imgElement.alt = `Testimoni ${testimoni.id}`;
+                imgElement.dataset.fullSrc = testimoni.fullUrl;
+                testimonialGrid.appendChild(imgElement);
+            });
+        }
+
+        // Event listener untuk tombol testimoni
+        testimonialBtn.addEventListener('click', () => {
+            const testimonialSection = document.getElementById('testimonial-section');
+            testimonialSection.scrollIntoView({ behavior: 'smooth' });
+        });
+
+        // Event listener untuk klik pada gambar testimoni
+        testimonialGrid.addEventListener('click', (event) => {
+            const target = event.target;
+            if (target.classList.contains('testimonial-img')) {
+                fullImage.src = target.dataset.fullSrc;
+                imageModal.classList.remove('hidden');
+            }
+        });
+
+        // Event listener untuk tombol tutup modal gambar
+        closeImageModalBtn.addEventListener('click', () => {
+            imageModal.classList.add('hidden');
+            fullImage.src = '';
+        });
+
+        howToOrderBtn.addEventListener('click', showHowToOrderModal);
+        bestSellerInfoBtn.addEventListener('click', showBestSellerInfoModal);
+        gridViewBtn.addEventListener('click', () => setView('grid'));
+        listViewBtn.addEventListener('click', () => setView('list'));
+
+        const firstVisit = localStorage.getItem('firstVisit');
+        if (!firstVisit) {
+            showHowToOrderModal();
+            localStorage.setItem('firstVisit', 'true');
+        }
+        
+        // Initial render
+        renderCart();
+        setView('grid');
+    </script>
+</body>
+</html>
+
