@@ -478,35 +478,23 @@
     <!-- Script Firebase -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, query, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // GANTI DENGAN FIREBASE CONFIG ANDA
+        // Firebase Config Anda
         const firebaseConfig = {
-
-
-  apiKey: "AIzaSyAdYbsk_p1mIvf7NXd2cLaQAFBP2mrxtuI",
-
-  authDomain: "jastip-arunika.firebaseapp.com",
-
-  projectId: "jastip-arunika",
-
-  storageBucket: "jastip-arunika.firebasestorage.app",
-
-  messagingSenderId: "272195022487",
-
-  appId: "1:272195022487:web:f9b3cfe42170c5bd6983d2"
-};
-        // GANTI DENGAN UID ADMIN ANDA
-        const ADMIN_UID = 'nx8LoIzVIYWqeOOVh5hQlY8vP9r1';
-
-        // Initialize Firebase
+            apiKey: "AIzaSyAdYbsk_p1mIvf7NXd2cLaQAFBP2mrxtuI",
+            authDomain: "jastip-arunika.firebaseapp.com",
+            projectId: "jastip-arunika",
+            storageBucket: "jastip-arunika.firebasestorage.app",
+            messagingSenderId: "272195022487",
+            appId: "1:272195022487:web:f9b3cfe42170c5bd6983d2"
+        };
+        
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        let userId;
-
-        // Object untuk menyimpan data produk dari Firestore
+        
         let products = {
             kopi: { arabika: [], robusta: [] },
             makanan: [],
@@ -518,7 +506,6 @@
         const whatsappNumber = '6285640312607';
         const titipFee = 25000;
 
-        // References to DOM elements
         const arabikaListDiv = document.getElementById('arabika-list');
         const robustaListDiv = document.getElementById('robusta-list');
         const makananListDiv = document.getElementById('makanan-list');
@@ -550,9 +537,11 @@
 
         let cart = {};
         
+        // Fungsi untuk mengambil data produk dari Firestore secara real-time
         function listenForProducts() {
-            const productsCollectionRef = collection(db, `products`);
-            onSnapshot(query(productsCollectionRef), (snapshot) => {
+            // Mengambil dari koleksi publik 'products'
+            const productsCollectionRef = collection(db, 'products');
+            onSnapshot(productsCollectionRef, (snapshot) => {
                 const fetchedProducts = {
                     kopi: { arabika: [], robusta: [] },
                     makanan: [],
@@ -561,7 +550,7 @@
 
                 snapshot.docs.forEach(doc => {
                     const data = { id: doc.id, ...doc.data() };
-                    const category = data.category.toLowerCase();
+                    const category = data.category ? data.category.toLowerCase() : 'lain-lain';
                     const subCategory = data.subCategory ? data.subCategory.toLowerCase() : null;
                     
                     if (category === 'kopi' && subCategory) {
@@ -580,13 +569,15 @@
                 updateUI();
             }, (error) => {
                 console.error("Error fetching products:", error);
-                loadingMessage.textContent = 'Gagal memuat data. Silakan coba lagi nanti.';
+                loadingMessage.textContent = 'Gagal memuat produk. Silakan coba lagi nanti.';
             });
         }
         
+        // Fungsi untuk mengambil data testimoni dari Firestore
         function listenForTestimonials() {
-            const testimonialsCollectionRef = collection(db, `testimonials`);
-            onSnapshot(query(testimonialsCollectionRef), (snapshot) => {
+            // Mengambil dari koleksi publik 'testimonials'
+            const testimonialsCollectionRef = collection(db, 'testimonials');
+            onSnapshot(testimonialsCollectionRef, (snapshot) => {
                 testimonials = [];
                 snapshot.docs.forEach(doc => {
                     testimonials.push({ id: doc.id, ...doc.data() });
@@ -605,8 +596,9 @@
             if (searchQuery.length > 0) {
                 filterProducts(searchQuery);
             } else {
-                const activeTabId = document.querySelector('.tab-btn.active').id;
-                const category = activeTabId.split('-')[1];
+                const activeTab = document.querySelector('.tab-btn.active');
+                const category = activeTab ? activeTab.id.split('-')[1] : 'kopi';
+                
                 let subCategory = null;
                 if (category === 'kopi') {
                     const activeSubTab = document.querySelector('#content-kopi .sub-tab-btn.active');
@@ -616,20 +608,8 @@
             }
         }
         
-        const signIn = async () => {
-            try {
-                await signInAnonymously(auth);
-                userId = auth.currentUser.uid;
-                console.log("Firebase signed in successfully. User ID:", userId);
-                listenForProducts();
-                listenForTestimonials();
-            } catch (error) {
-                console.error("Error signing in to Firebase:", error);
-                document.getElementById('loading-message').textContent = 'Gagal memuat data. Silakan coba lagi nanti.';
-                document.getElementById('testimonial-loading-message').textContent = '';
-            }
-        };
-        signIn();
+        listenForProducts();
+        listenForTestimonials();
         
         function showConfirmationModal(productName, productId, selectedOptionId = null) {
             const modal = document.getElementById('confirmation-modal');
@@ -726,7 +706,7 @@
             let productActionsHtml = '';
             if (product.options && product.options.length > 0) {
                 let optionsHtml = product.options.map(option =>
-                    `<option value="${option.id}">${option.name} - Rp${option.price.toLocaleString('id-ID')}</option>`
+                    `<option value="${product.id}-${option.id}">${option.name} - Rp${option.price.toLocaleString('id-ID')}</option>`
                 ).join('');
 
                 productActionsHtml = `
@@ -945,8 +925,18 @@
             for (const id in cart) {
                 hasItems = true;
                 const item = cart[id];
-                orderDetails += `${item.quantity}x ${item.name} - Rp${(item.price * item.quantity).toLocaleString('id-ID')}\n`;
                 total += item.price * item.quantity;
+
+                const cartItemElement = document.createElement('div');
+                cartItemElement.className = 'flex justify-between items-center p-3 bg-gray-700 rounded-lg shadow-sm';
+                cartItemElement.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <button data-id="${id}" class="remove-from-cart-btn bg-red-500 hover:bg-red-600 text-white w-6 h-6 rounded-full text-sm font-bold flex items-center justify-center">-</button>
+                        <span>${item.quantity}x ${item.name}</span>
+                    </div>
+                    <span class="font-semibold text-amber-500">Rp${(item.price * item.quantity).toLocaleString('id-ID')}</span>
+                `;
+                cartItemsDiv.appendChild(cartItemElement);
             }
             
             if (hasItems) {
