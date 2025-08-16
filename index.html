@@ -428,7 +428,7 @@
                 <ol class="list-decimal list-inside space-y-1 text-sm">
                     <li>Pilih produk & ukuran.</li>
                     <li>Klik "+ 𝙏𝙖𝙢𝙗𝙖𝙝" untuk menambahkannya ke keranjang.</li>
-                    <li>Selesai belanja, klik "𝙋𝙚𝙨𝙖𝙣 𝙎𝙚𝙠𝙖𝙧𝙖𝙣𝙜 𝙑𝙖 𝙒𝙝𝙖𝙩𝙨𝙖𝙥𝙥".</li>
+                    <li>Selesai belanja, klik "𝙋𝙚𝙨𝙖𝙣 𝙎𝙚𝙠𝙖𝙧𝙖𝙣𝙜 𝙑a 𝙒𝙝𝙖𝙩𝙨𝙖𝙥𝙥".</li>
                     <li>Pesan pesanan Anda sudah terisi otomatis, tinggal kirim.</li>
                 </ol>
             </div>
@@ -481,11 +481,24 @@
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, onSnapshot, query, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Global variables provided by the Canvas environment
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-        const ADMIN_UID = '[nx8LoIzVIYWqeOOVh5hQlY8vP9r1]'; // Ganti dengan UID admin Anda
+        // GANTI DENGAN FIREBASE CONFIG ANDA
+        const firebaseConfig = {
+
+
+  apiKey: "AIzaSyAdYbsk_p1mIvf7NXd2cLaQAFBP2mrxtuI",
+
+  authDomain: "jastip-arunika.firebaseapp.com",
+
+  projectId: "jastip-arunika",
+
+  storageBucket: "jastip-arunika.firebasestorage.app",
+
+  messagingSenderId: "272195022487",
+
+  appId: "1:272195022487:web:f9b3cfe42170c5bd6983d2"
+};
+        // GANTI DENGAN UID ADMIN ANDA
+        const ADMIN_UID = 'nx8LoIzVIYWqeOOVh5hQlY8vP9r1';
 
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
@@ -537,10 +550,8 @@
 
         let cart = {};
         
-        // Fungsi untuk mengambil data produk dari Firestore secara real-time
         function listenForProducts() {
-            // Gunakan `onSnapshot` untuk mendapatkan update real-time
-            const productsCollectionRef = collection(db, `artifacts/${appId}/users/${ADMIN_UID}/products`);
+            const productsCollectionRef = collection(db, `products`);
             onSnapshot(query(productsCollectionRef), (snapshot) => {
                 const fetchedProducts = {
                     kopi: { arabika: [], robusta: [] },
@@ -566,7 +577,6 @@
                 loadingMessage.classList.add('hidden');
                 console.log("Products loaded from Firestore:", products);
 
-                // Re-render tampilan setelah data baru diterima
                 updateUI();
             }, (error) => {
                 console.error("Error fetching products:", error);
@@ -574,9 +584,8 @@
             });
         }
         
-        // Fungsi untuk mengambil data testimoni dari Firestore
         function listenForTestimonials() {
-            const testimonialsCollectionRef = collection(db, `artifacts/${appId}/users/${ADMIN_UID}/testimonials`);
+            const testimonialsCollectionRef = collection(db, `testimonials`);
             onSnapshot(query(testimonialsCollectionRef), (snapshot) => {
                 testimonials = [];
                 snapshot.docs.forEach(doc => {
@@ -600,24 +609,18 @@
                 const category = activeTabId.split('-')[1];
                 let subCategory = null;
                 if (category === 'kopi') {
-                    const activeSubTab = document.querySelector('.sub-tab-btn.active');
+                    const activeSubTab = document.querySelector('#content-kopi .sub-tab-btn.active');
                     subCategory = activeSubTab ? activeSubTab.id.split('-')[2] : 'arabika';
                 }
                 renderProducts(category, subCategory);
             }
         }
         
-        // Panggil fungsi-fungsi ini setelah autentikasi
         const signIn = async () => {
             try {
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                } else {
-                    await signInAnonymously(auth);
-                }
+                await signInAnonymously(auth);
                 userId = auth.currentUser.uid;
                 console.log("Firebase signed in successfully. User ID:", userId);
-                // Call render functions after authentication is complete
                 listenForProducts();
                 listenForTestimonials();
             } catch (error) {
@@ -628,7 +631,6 @@
         };
         signIn();
         
-        // Fungsi untuk menampilkan pop-up konfirmasi
         function showConfirmationModal(productName, productId, selectedOptionId = null) {
             const modal = document.getElementById('confirmation-modal');
             const modalMessage = document.getElementById('modal-message');
@@ -678,13 +680,11 @@
             modal.classList.add('hidden');
         }
 
-        // Fungsi untuk menampilkan pop-up cara pesan
         function showHowToOrderModal() {
             const modal = document.getElementById('how-to-order-modal');
             modal.classList.remove('hidden');
         }
 
-        // Fungsi untuk menampilkan pop-up info best seller
         function showBestSellerInfoModal() {
             const modal = document.getElementById('best-seller-info-modal');
             modal.classList.remove('hidden');
@@ -770,7 +770,6 @@
             return productElement;
         }
 
-        // Fungsi untuk merender produk di tab yang dipilih
         function renderProducts(category, subCategory = null) {
             arabikaListDiv.innerHTML = '';
             robustaListDiv.innerHTML = '';
@@ -807,7 +806,6 @@
             setView(activeView);
         }
 
-        // Fungsi baru untuk memfilter dan merender produk berdasarkan pencarian
         function filterProducts(query) {
             const lowerCaseQuery = query.toLowerCase();
             mainTabs.classList.add('hidden');
@@ -962,7 +960,6 @@
             window.open(whatsappUrl, '_blank');
         });
 
-        // Event listener untuk tombol kirim saran
         sendSuggestionBtn.addEventListener('click', () => {
             const itemName = suggestionItemNameInput.value;
             const itemPrice = suggestionItemPriceInput.value;
@@ -1015,13 +1012,11 @@
             });
         }
 
-        // Tab logic
         const tabButtons = document.querySelectorAll('.tab-btn');
         const subTabButtons = document.querySelectorAll('.sub-tab-btn');
         const tabPanes = document.querySelectorAll('.tab-pane');
         const subTabPanes = document.querySelectorAll('.sub-tab-pane');
 
-        // Fungsi untuk mengaktifkan tab sesuai kategori
         function activateCategoryTab(category) {
             tabButtons.forEach(b => b.classList.remove('active'));
             const targetTab = document.getElementById(`tab-${category}`);
@@ -1035,7 +1030,6 @@
             }
         }
 
-        // Event listener untuk tab utama
         tabButtons.forEach(btn => {
             btn.addEventListener('click', () => {
                 searchInput.value = '';
@@ -1059,7 +1053,6 @@
             });
         });
 
-        // Event listener untuk sub-tab
         subTabButtons.forEach(btn => {
             btn.addEventListener('click', () => {
                 subTabButtons.forEach(b => b.classList.remove('active'));
@@ -1074,7 +1067,6 @@
             });
         });
 
-        // Event listener untuk input pencarian
         searchInput.addEventListener('input', (event) => {
             const query = event.target.value.trim();
             if (query.length > 0) {
@@ -1095,7 +1087,6 @@
             }
         });
 
-        // Fungsi untuk merender gambar testimoni
         function renderTestimonials() {
             testimonialGrid.innerHTML = '';
             testimonials.forEach(testimoni => {
@@ -1108,13 +1099,11 @@
             });
         }
 
-        // Event listener untuk tombol testimoni
         testimonialBtn.addEventListener('click', () => {
             const testimonialSection = document.getElementById('testimonial-section');
             testimonialSection.scrollIntoView({ behavior: 'smooth' });
         });
 
-        // Event listener untuk klik pada gambar testimoni
         testimonialGrid.addEventListener('click', (event) => {
             const target = event.target;
             if (target.classList.contains('testimonial-img')) {
@@ -1123,7 +1112,6 @@
             }
         });
 
-        // Event listener untuk tombol tutup modal gambar
         closeImageModalBtn.addEventListener('click', () => {
             imageModal.classList.add('hidden');
             fullImage.src = '';
@@ -1140,7 +1128,6 @@
             localStorage.setItem('firstVisit', 'true');
         }
         
-        // Initial render
         renderCart();
         setView('grid');
     </script>
