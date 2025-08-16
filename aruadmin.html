@@ -33,6 +33,20 @@
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
             color: #e0e0e0;
         }
+        /* Flex layout for variant inputs */
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: nowrap;
+        }
+        .input-group input {
+            flex-grow: 1;
+            min-width: 80px; /* Adjusted min-width for mobile */
+        }
+        .table-container {
+            overflow-x: auto;
+        }
     </style>
 </head>
 <body class="bg-gray-900 text-gray-200 p-4 md:p-8">
@@ -126,7 +140,7 @@
                     </div>
                 </form>
 
-                <div class="mt-8">
+                <div class="mt-8 table-container">
                     <h3 class="text-lg font-bold mb-2">Daftar Produk</h3>
                     <table class="w-full text-left table-auto">
                         <thead>
@@ -150,12 +164,8 @@
                 <form id="testimonial-form" class="space-y-4">
                     <input type="hidden" id="testimonial-id">
                     <div>
-                        <label for="testimonial-thumb-url" class="block text-sm font-medium">URL Gambar Thumbnail</label>
-                        <input type="url" id="testimonial-thumb-url" required class="w-full bg-gray-700 text-gray-200 border border-gray-600 rounded-lg p-3">
-                    </div>
-                    <div>
-                        <label for="testimonial-full-url" class="block text-sm font-medium">URL Gambar Penuh</label>
-                        <input type="url" id="testimonial-full-url" required class="w-full bg-gray-700 text-gray-200 border border-gray-600 rounded-lg p-3">
+                        <label for="testimonial-url" class="block text-sm font-medium">URL Gambar Testimoni</label>
+                        <input type="url" id="testimonial-url" required class="w-full bg-gray-700 text-gray-200 border border-gray-600 rounded-lg p-3" placeholder="Gunakan satu URL untuk gambar testimoni">
                     </div>
                     <div class="flex space-x-4">
                         <button type="submit" id="save-testimonial-btn" class="flex-1 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg transition-colors">Tambah/Edit Testimoni</button>
@@ -243,7 +253,6 @@
                 if (userCredential.user.uid === ADMIN_UID) {
                     showModal('Sukses', 'Login berhasil!');
                 } else {
-                    // Sign out unauthorized user immediately
                     await auth.signOut();
                     loadingContainer.classList.add('hidden');
                     loginContainer.classList.remove('hidden');
@@ -274,8 +283,7 @@
         
         const testimonialForm = document.getElementById('testimonial-form');
         const testimonialIdInput = document.getElementById('testimonial-id');
-        const testimonialThumbUrlInput = document.getElementById('testimonial-thumb-url');
-        const testimonialFullUrlInput = document.getElementById('testimonial-full-url');
+        const testimonialUrlInput = document.getElementById('testimonial-url');
         const testimonialListDiv = document.getElementById('testimonial-list');
         const cancelTestimonialEditBtn = document.getElementById('cancel-testimonial-edit-btn');
         
@@ -312,10 +320,10 @@
         
         function createOptionInput(option = { name: '', price: '' }) {
             const optionGroup = document.createElement('div');
-            optionGroup.className = 'flex space-x-2 items-center';
+            optionGroup.className = 'input-group space-y-2 md:space-y-0';
             optionGroup.innerHTML = `
-                <input type="text" value="${option.name}" placeholder="Nama Varian (contoh: 100g)" class="option-name w-1/2 bg-gray-700 text-gray-200 border border-gray-600 rounded-lg p-3">
-                <input type="number" value="${option.price}" placeholder="Harga (contoh: 30000)" class="option-price w-1/2 bg-gray-700 text-gray-200 border border-gray-600 rounded-lg p-3">
+                <input type="text" value="${option.name}" placeholder="Nama Varian (contoh: 100g)" class="option-name flex-1 bg-gray-700 text-gray-200 border border-gray-600 rounded-lg p-3">
+                <input type="number" value="${option.price}" placeholder="Harga (contoh: 30000)" class="option-price flex-1 bg-gray-700 text-gray-200 border border-gray-600 rounded-lg p-3">
                 <button type="button" class="remove-option-btn text-red-500 hover:text-red-400 p-2"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
             `;
             optionsContainer.appendChild(optionGroup);
@@ -360,11 +368,12 @@
             
             if (category === 'Kopi') {
                 const subCategory = productSubCategorySelect.value;
-                const optionElements = optionsContainer.querySelectorAll('div');
+                const optionElements = optionsContainer.querySelectorAll('.input-group');
                 const options = Array.from(optionElements).map(el => {
                     const optionName = el.querySelector('.option-name').value.trim();
                     const optionPrice = parseInt(el.querySelector('.option-price').value, 10);
-                    return { name: optionName, price: optionPrice, id: `${name.replace(/\s/g, '').toLowerCase()}-${optionName.replace(/\s/g, '').toLowerCase()}` };
+                    const optionId = optionName.replace(/\s/g, '').toLowerCase();
+                    return { name: optionName, price: optionPrice, id: optionId };
                 }).filter(o => o.name && !isNaN(o.price));
                 if (options.length === 0) {
                      showModal('Error', 'Silakan tambahkan setidaknya satu varian produk kopi.');
@@ -460,10 +469,10 @@
                     const div = document.createElement('div');
                     div.className = 'relative group';
                     div.innerHTML = `
-                        <img src="${testimonial.thumbUrl}" alt="Testimoni" class="w-full h-auto rounded-lg">
+                        <img src="${testimonial.url}" alt="Testimoni" class="w-full h-auto rounded-lg">
                         <div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity space-x-2">
                             <button data-id="${testimonial.id}" class="edit-testimonial-btn bg-yellow-500 text-white p-2 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pencil"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg></button>
-                            <button data-id="${testimonial.id}" class="delete-testimonial-btn bg-red-500 text-white p-2 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg></button>
+                            <button data-id="${testimonial.id}" class="delete-testimonial-btn bg-red-500 text-white p-2 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucude-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg></button>
                         </div>
                     `;
                     testimonialListDiv.appendChild(div);
@@ -477,10 +486,9 @@
         testimonialForm.addEventListener('submit', async (event) => {
             event.preventDefault();
 
-            const thumbUrl = testimonialThumbUrlInput.value.trim();
-            const fullUrl = testimonialFullUrlInput.value.trim();
+            const url = testimonialUrlInput.value.trim();
 
-            const testimonialData = { thumbUrl, fullUrl };
+            const testimonialData = { url };
             const testimonialId = testimonialIdInput.value;
 
             try {
@@ -514,8 +522,7 @@
                 const testimonial = testimonialDoc.data();
                 
                 testimonialIdInput.value = testimonialId;
-                testimonialThumbUrlInput.value = testimonial.thumbUrl;
-                testimonialFullUrlInput.value = testimonial.fullUrl;
+                testimonialUrlInput.value = testimonial.url;
                 cancelTestimonialEditBtn.classList.remove('hidden');
             } else if (target.classList.contains('delete-testimonial-btn')) {
                 if (confirm('Apakah Anda yakin ingin menghapus testimoni ini?')) {
