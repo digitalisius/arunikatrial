@@ -1072,9 +1072,9 @@
             testimonials.forEach(testimoni => {
                 const imgElement = document.createElement('img');
                 imgElement.className = 'testimonial-img';
-                imgElement.src = testimoni.thumbUrl;
+                imgElement.src = testimoni.url;
                 imgElement.alt = `Testimoni ${testimoni.id}`;
-                imgElement.dataset.fullSrc = testimoni.fullUrl;
+                imgElement.dataset.fullSrc = testimoni.url;
                 testimonialGrid.appendChild(imgElement);
             });
         }
