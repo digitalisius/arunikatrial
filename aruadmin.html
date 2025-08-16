@@ -186,26 +186,22 @@
     <!-- Script Firebase -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, doc, setDoc, deleteDoc, onSnapshot, query, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // GANTI DENGAN FIREBASE CONFIG ANDA
+        // Firebase Config Anda
         const firebaseConfig = {
-
-
-  apiKey: "AIzaSyAdYbsk_p1mIvf7NXd2cLaQAFBP2mrxtuI",
-
-  authDomain: "jastip-arunika.firebaseapp.com",
-
-  projectId: "jastip-arunika",
-
-  storageBucket: "jastip-arunika.firebasestorage.app",
-
-  messagingSenderId: "272195022487",
-
-  appId: "1:272195022487:web:f9b3cfe42170c5bd6983d2"
-};
+            apiKey: "AIzaSyAdYbsk_p1mIvf7NXd2cLaQAFBP2mrxtuI",
+            authDomain: "jastip-arunika.firebaseapp.com",
+            projectId: "jastip-arunika",
+            storageBucket: "jastip-arunika.firebasestorage.app",
+            messagingSenderId: "272195022487",
+            appId: "1:272195022487:web:f9b3cfe42170c5bd6983d2"
+        };
         
+        // UID Admin Anda
+        const ADMIN_UID = 'nx8LoIzVIYWqeOOVh5hQlY8vP9r1';
+
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
@@ -219,7 +215,7 @@
         const userIdDisplay = document.getElementById('user-id');
         
         onAuthStateChanged(auth, async (user) => {
-            if (user) {
+            if (user && user.uid === ADMIN_UID) {
                 userId = user.uid;
                 userIdDisplay.textContent = `User ID: ${userId}`;
                 loadingContainer.classList.add('hidden');
@@ -232,7 +228,7 @@
                 loadingContainer.classList.add('hidden');
                 loginContainer.classList.remove('hidden');
                 adminContent.classList.add('hidden');
-                console.log("User not signed in. Showing login form.");
+                console.log("User not authorized. Showing login form.");
             }
         });
         
@@ -243,8 +239,16 @@
             try {
                 loadingContainer.classList.remove('hidden');
                 loginContainer.classList.add('hidden');
-                await signInWithEmailAndPassword(auth, email, password);
-                showModal('Sukses', 'Login berhasil!');
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                if (userCredential.user.uid === ADMIN_UID) {
+                    showModal('Sukses', 'Login berhasil!');
+                } else {
+                    // Sign out unauthorized user immediately
+                    await auth.signOut();
+                    loadingContainer.classList.add('hidden');
+                    loginContainer.classList.remove('hidden');
+                    showModal('Akses Ditolak', 'Anda tidak memiliki hak akses admin.');
+                }
             } catch (error) {
                 console.error("Login failed:", error);
                 loadingContainer.classList.add('hidden');
