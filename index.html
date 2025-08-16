@@ -76,10 +76,10 @@
         }
         .list-view .product-card .icon-and-info {
             display: flex;
-            align-items: center;
             flex-grow: 1;
             overflow: hidden;
             flex-shrink: 1;
+            align-items: center;
         }
         .list-view .product-card .icon-container {
             font-size: 1.2rem;
@@ -479,39 +479,19 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, query, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Global variables provided by the Canvas environment
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-        
+        const ADMIN_UID = '[nx8LoIzVIYWqeOOVh5hQlY8vP9r1]'; // Ganti dengan UID admin Anda
+
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
         let userId;
-
-        // Sign in anonymously or with a custom token
-        const signIn = async () => {
-            try {
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                } else {
-                    await signInAnonymously(auth);
-                }
-                userId = auth.currentUser.uid;
-                console.log("Firebase signed in successfully. User ID:", userId);
-                // Call render functions after authentication is complete
-                listenForProducts();
-                listenForTestimonials();
-            } catch (error) {
-                console.error("Error signing in to Firebase:", error);
-                document.getElementById('loading-message').textContent = 'Gagal memuat data. Silakan coba lagi nanti.';
-                document.getElementById('testimonial-loading-message').textContent = '';
-            }
-        };
-        signIn();
 
         // Object untuk menyimpan data produk dari Firestore
         let products = {
@@ -560,7 +540,7 @@
         // Fungsi untuk mengambil data produk dari Firestore secara real-time
         function listenForProducts() {
             // Gunakan `onSnapshot` untuk mendapatkan update real-time
-            const productsCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/products`);
+            const productsCollectionRef = collection(db, `artifacts/${appId}/users/${ADMIN_UID}/products`);
             onSnapshot(query(productsCollectionRef), (snapshot) => {
                 const fetchedProducts = {
                     kopi: { arabika: [], robusta: [] },
@@ -587,23 +567,16 @@
                 console.log("Products loaded from Firestore:", products);
 
                 // Re-render tampilan setelah data baru diterima
-                const activeTabId = document.querySelector('.tab-btn.active').id;
-                const category = activeTabId.split('-')[1];
-                let subCategory = null;
-                if (category === 'kopi') {
-                    const activeSubTab = document.querySelector('.sub-tab-btn.active');
-                    subCategory = activeSubTab ? activeSubTab.id.split('-')[2] : 'arabika';
-                }
-                renderProducts(category, subCategory);
+                updateUI();
             }, (error) => {
                 console.error("Error fetching products:", error);
-                loadingMessage.textContent = 'Gagal memuat produk. Silakan coba lagi.';
+                loadingMessage.textContent = 'Gagal memuat data. Silakan coba lagi nanti.';
             });
         }
         
         // Fungsi untuk mengambil data testimoni dari Firestore
         function listenForTestimonials() {
-            const testimonialsCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/testimonials`);
+            const testimonialsCollectionRef = collection(db, `artifacts/${appId}/users/${ADMIN_UID}/testimonials`);
             onSnapshot(query(testimonialsCollectionRef), (snapshot) => {
                 testimonials = [];
                 snapshot.docs.forEach(doc => {
@@ -618,6 +591,43 @@
             });
         }
         
+        function updateUI() {
+            const searchQuery = searchInput.value.trim();
+            if (searchQuery.length > 0) {
+                filterProducts(searchQuery);
+            } else {
+                const activeTabId = document.querySelector('.tab-btn.active').id;
+                const category = activeTabId.split('-')[1];
+                let subCategory = null;
+                if (category === 'kopi') {
+                    const activeSubTab = document.querySelector('.sub-tab-btn.active');
+                    subCategory = activeSubTab ? activeSubTab.id.split('-')[2] : 'arabika';
+                }
+                renderProducts(category, subCategory);
+            }
+        }
+        
+        // Panggil fungsi-fungsi ini setelah autentikasi
+        const signIn = async () => {
+            try {
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                userId = auth.currentUser.uid;
+                console.log("Firebase signed in successfully. User ID:", userId);
+                // Call render functions after authentication is complete
+                listenForProducts();
+                listenForTestimonials();
+            } catch (error) {
+                console.error("Error signing in to Firebase:", error);
+                document.getElementById('loading-message').textContent = 'Gagal memuat data. Silakan coba lagi nanti.';
+                document.getElementById('testimonial-loading-message').textContent = '';
+            }
+        };
+        signIn();
+        
         // Fungsi untuk menampilkan pop-up konfirmasi
         function showConfirmationModal(productName, productId, selectedOptionId = null) {
             const modal = document.getElementById('confirmation-modal');
@@ -626,9 +636,10 @@
             const noBtn = document.getElementById('no-btn');
 
             let fullProductName = productName;
-            if (selectedOptionId) {
-                const allProducts = Object.values(products).flatMap(cat => Array.isArray(cat) ? cat : Object.values(cat).flatMap(subCat => subCat));
-                const product = allProducts.find(p => p.id === productId);
+            const allProducts = Object.values(products).flatMap(cat => Array.isArray(cat) ? cat : Object.values(cat).flatMap(subCat => subCat));
+            const product = allProducts.find(p => p.id === productId);
+
+            if (selectedOptionId && product && product.options) {
                 const option = product.options.find(o => o.id === selectedOptionId);
                 fullProductName = `${productName} (${option.name})`;
             }
@@ -732,7 +743,6 @@
                 const priceHtml = product.price ? `<p class="text-amber-500 font-bold text-xs sm:text-sm">Rp${product.price.toLocaleString('id-ID')}</p>` : '';
                 const shopeeBtnHtml = product.shopeeLink ? `<a href="${product.shopeeLink}" target="_blank" class="shopee-btn"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shopping-bag"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4H6z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>Beli di Shopee</a>` : '';
                 
-                // Jika tidak ada options, tampilkan tombol tambah single item
                 productActionsHtml = `
                     <div class="product-actions-container flex flex-col items-center gap-2 w-full mt-2">
                         ${priceHtml}
@@ -874,7 +884,7 @@
             let itemToAdd;
             let cartItemId;
 
-            if (productWithVariants.options) {
+            if (productWithVariants.options && selectedOptionId) {
                 let selectedOption = productWithVariants.options.find(o => o.id === selectedOptionId);
                 if (!selectedOption) return;
 
@@ -1034,16 +1044,17 @@
                 mainTabs.classList.remove('hidden');
                 tabContent.classList.remove('hidden');
                 
-                activateCategoryTab(btn.id.split('-')[1]);
-
-                if (btn.id === 'tab-kopi') {
+                const category = btn.id.split('-')[1];
+                activateCategoryTab(category);
+                
+                if (category === 'kopi') {
                     document.getElementById('sub-tab-content').classList.remove('hidden');
-                    const activeSubTab = document.querySelector('.sub-tab-btn.active');
+                    const activeSubTab = document.querySelector('#content-kopi .sub-tab-btn.active');
                     const activeSubTabId = activeSubTab ? activeSubTab.id.split('-')[2] : 'arabika';
-                    renderProducts('kopi', activeSubTabId);
+                    renderProducts(category, activeSubTabId);
                 } else {
                     document.getElementById('sub-tab-content').classList.add('hidden');
-                    renderProducts(btn.id.split('-')[1]);
+                    renderProducts(category);
                 }
             });
         });
