@@ -428,7 +428,7 @@
                 <ol class="list-decimal list-inside space-y-1 text-sm">
                     <li>Pilih produk & ukuran.</li>
                     <li>Klik "+ 𝙏𝙖𝙢𝙗𝙖𝙝" untuk menambahkannya ke keranjang.</li>
-                    <li>Selesai belanja, klik "𝙋𝙚𝙨𝙖𝙣 𝙎𝙚𝙠𝙖𝙧𝙖𝙣𝙜 𝙑a 𝙒𝙝𝙖𝙩𝙨𝙖𝙥𝙥".</li>
+                    <li>Selesai belanja, klik "𝙋𝙚𝙨𝙖𝙣 𝙎𝙚𝙠𝙖𝙧𝙖𝙣𝙜 𝙑a 𝙒𝙝a𝙩𝙨a𝙥𝙥".</li>
                     <li>Pesan pesanan Anda sudah terisi otomatis, tinggal kirim.</li>
                 </ol>
             </div>
@@ -479,7 +479,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, query, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Firebase Config Anda
         const firebaseConfig = {
@@ -537,7 +537,6 @@
 
         let cart = {};
         
-        // Fungsi untuk mengambil data produk dari Firestore secara real-time
         function listenForProducts() {
             // Mengambil dari koleksi publik 'products'
             const productsCollectionRef = collection(db, 'products');
@@ -622,7 +621,7 @@
             const product = allProducts.find(p => p.id === productId);
 
             if (selectedOptionId && product && product.options) {
-                const option = product.options.find(o => o.id === selectedOptionId);
+                const option = product.options.find(o => `${product.id}-${o.id}` === selectedOptionId);
                 fullProductName = `${productName} (${option.name})`;
             }
 
@@ -863,14 +862,14 @@
             let cartItemId;
 
             if (productWithVariants.options && selectedOptionId) {
-                let selectedOption = productWithVariants.options.find(o => o.id === selectedOptionId);
-                if (!selectedOption) return;
+                const option = productWithVariants.options.find(o => `${productWithVariants.id}-${o.id}` === selectedOptionId);
+                if (!option) return;
 
                 cartItemId = selectedOptionId;
                 itemToAdd = {
                     id: cartItemId,
-                    name: `${productWithVariants.name} (${selectedOption.name})`,
-                    price: selectedOption.price
+                    name: `${productWithVariants.name} (${option.name})`,
+                    price: option.price
                 };
             } else {
                 cartItemId = productId;
@@ -925,18 +924,9 @@
             for (const id in cart) {
                 hasItems = true;
                 const item = cart[id];
-                total += item.price * item.quantity;
-
-                const cartItemElement = document.createElement('div');
-                cartItemElement.className = 'flex justify-between items-center p-3 bg-gray-700 rounded-lg shadow-sm';
-                cartItemElement.innerHTML = `
-                    <div class="flex items-center space-x-3">
-                        <button data-id="${id}" class="remove-from-cart-btn bg-red-500 hover:bg-red-600 text-white w-6 h-6 rounded-full text-sm font-bold flex items-center justify-center">-</button>
-                        <span>${item.quantity}x ${item.name}</span>
-                    </div>
-                    <span class="font-semibold text-amber-500">Rp${(item.price * item.quantity).toLocaleString('id-ID')}</span>
-                `;
-                cartItemsDiv.appendChild(cartItemElement);
+                const subtotal = item.price * item.quantity;
+                orderDetails += `${item.quantity}x ${item.name} (Rp${item.price.toLocaleString('id-ID')}/item) = Rp${subtotal.toLocaleString('id-ID')}\n`;
+                total += subtotal;
             }
             
             if (hasItems) {
