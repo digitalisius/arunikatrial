@@ -189,10 +189,22 @@
         import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, doc, setDoc, deleteDoc, onSnapshot, query, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Global variables provided by the Canvas environment
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        // GANTI DENGAN FIREBASE CONFIG ANDA
+        const firebaseConfig = {
+
+
+  apiKey: "AIzaSyAdYbsk_p1mIvf7NXd2cLaQAFBP2mrxtuI",
+
+  authDomain: "jastip-arunika.firebaseapp.com",
+
+  projectId: "jastip-arunika",
+
+  storageBucket: "jastip-arunika.firebasestorage.app",
+
+  messagingSenderId: "272195022487",
+
+  appId: "1:272195022487:web:f9b3cfe42170c5bd6983d2"
+};
         
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
@@ -206,21 +218,17 @@
         const loadingContainer = document.getElementById('loading-container');
         const userIdDisplay = document.getElementById('user-id');
         
-        // Listen for authentication state changes
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                // User is signed in, show admin panel
                 userId = user.uid;
                 userIdDisplay.textContent = `User ID: ${userId}`;
                 loadingContainer.classList.add('hidden');
                 loginContainer.classList.add('hidden');
                 adminContent.classList.remove('hidden');
                 console.log("Admin signed in. User ID:", userId);
-                // Listen for real-time changes to products and testimonials
                 listenForProducts();
                 listenForTestimonials();
             } else {
-                // User is signed out, show login form
                 loadingContainer.classList.add('hidden');
                 loginContainer.classList.remove('hidden');
                 adminContent.classList.add('hidden');
@@ -228,7 +236,6 @@
             }
         });
         
-        // Handle login form submission
         loginForm.addEventListener('submit', async (event) => {
             event.preventDefault();
             const email = document.getElementById('login-email').value;
@@ -246,7 +253,6 @@
             }
         });
 
-        // DOM elements
         const productForm = document.getElementById('product-form');
         const productIdInput = document.getElementById('product-id');
         const productNameInput = document.getElementById('product-name');
@@ -274,7 +280,6 @@
         const modalMessage = document.getElementById('modal-message');
         const modalCloseBtn = document.getElementById('modal-close-btn');
 
-        // Functions for modal
         function showModal(title, message) {
             modalTitle.textContent = title;
             modalMessage.textContent = message;
@@ -285,7 +290,6 @@
             modal.classList.add('hidden');
         });
 
-        // Show/hide fields based on category
         function updateFormFields(category) {
             if (category === 'Kopi') {
                 coffeeFields.classList.remove('hidden');
@@ -296,14 +300,12 @@
                 coffeeFields.classList.add('hidden');
                 nonCoffeeFields.classList.remove('hidden');
                 productPriceInput.setAttribute('required', 'required');
-                // shopeeLink is optional
             }
         }
         productCategorySelect.addEventListener('change', (event) => {
             updateFormFields(event.target.value);
         });
         
-        // Product Options Management
         function createOptionInput(option = { name: '', price: '' }) {
             const optionGroup = document.createElement('div');
             optionGroup.className = 'flex space-x-2 items-center';
@@ -319,10 +321,8 @@
         }
         addOptionBtn.addEventListener('click', () => createOptionInput());
 
-        // PRODUCT CRUD OPERATIONS
-        
         function listenForProducts() {
-            const productsCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/products`);
+            const productsCollectionRef = collection(db, `products`);
             onSnapshot(query(productsCollectionRef), (snapshot) => {
                 productListTable.innerHTML = '';
                 snapshot.docs.forEach(doc => {
@@ -380,10 +380,10 @@
             const productId = productIdInput.value;
             try {
                 if (productId) {
-                    await setDoc(doc(db, `artifacts/${appId}/users/${userId}/products`, productId), productData);
+                    await setDoc(doc(db, `products`, productId), productData);
                     showModal('Sukses', 'Produk berhasil diperbarui!');
                 } else {
-                    await addDoc(collection(db, `artifacts/${appId}/users/${userId}/products`), productData);
+                    await addDoc(collection(db, `products`), productData);
                     showModal('Sukses', 'Produk berhasil ditambahkan!');
                 }
                 productForm.reset();
@@ -402,7 +402,7 @@
             const productId = target.dataset.id;
             
             if (target.classList.contains('edit-product-btn')) {
-                const productsCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/products`);
+                const productsCollectionRef = collection(db, `products`);
                 const snapshot = await getDocs(query(productsCollectionRef));
                 const productDoc = snapshot.docs.find(doc => doc.id === productId);
                 if (!productDoc) return;
@@ -429,7 +429,7 @@
             } else if (target.classList.contains('delete-product-btn')) {
                 if (confirm('Apakah Anda yakin ingin menghapus produk ini?')) {
                     try {
-                        await deleteDoc(doc(db, `artifacts/${appId}/users/${userId}/products`, productId));
+                        await deleteDoc(doc(db, `products`, productId));
                         showModal('Sukses', 'Produk berhasil dihapus!');
                     } catch (error) {
                         console.error("Error deleting product:", error);
@@ -447,10 +447,8 @@
             cancelEditBtn.classList.add('hidden');
         });
         
-        // TESTIMONIAL CRUD OPERATIONS
-        
         function listenForTestimonials() {
-            const testimonialsCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/testimonials`);
+            const testimonialsCollectionRef = collection(db, `testimonials`);
             onSnapshot(query(testimonialsCollectionRef), (snapshot) => {
                 testimonialListDiv.innerHTML = '';
                 snapshot.docs.forEach(doc => {
@@ -483,10 +481,10 @@
 
             try {
                 if (testimonialId) {
-                    await setDoc(doc(db, `artifacts/${appId}/users/${userId}/testimonials`, testimonialId), testimonialData);
+                    await setDoc(doc(db, `testimonials`, testimonialId), testimonialData);
                     showModal('Sukses', 'Testimoni berhasil diperbarui!');
                 } else {
-                    await addDoc(collection(db, `artifacts/${appId}/users/${userId}/testimonials`), testimonialData);
+                    await addDoc(collection(db, `testimonials`), testimonialData);
                     showModal('Sukses', 'Testimoni berhasil ditambahkan!');
                 }
                 testimonialForm.reset();
@@ -505,7 +503,7 @@
             const testimonialId = target.dataset.id;
             
             if (target.classList.contains('edit-testimonial-btn')) {
-                const testimonialsCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/testimonials`);
+                const testimonialsCollectionRef = collection(db, `testimonials`);
                 const snapshot = await getDocs(query(testimonialsCollectionRef));
                 const testimonialDoc = snapshot.docs.find(doc => doc.id === testimonialId);
                 if (!testimonialDoc) return;
@@ -518,7 +516,7 @@
             } else if (target.classList.contains('delete-testimonial-btn')) {
                 if (confirm('Apakah Anda yakin ingin menghapus testimoni ini?')) {
                     try {
-                        await deleteDoc(doc(db, `artifacts/${appId}/users/${userId}/testimonials`, testimonialId));
+                        await deleteDoc(doc(db, `testimonials`, testimonialId));
                         showModal('Sukses', 'Testimoni berhasil dihapus!');
                     } catch (error) {
                         console.error("Error deleting testimonial:", error);
@@ -534,7 +532,6 @@
             cancelTestimonialEditBtn.classList.add('hidden');
         });
         
-        // Initial form setup
         updateFormFields(productCategorySelect.value);
     </script>
 </body>
