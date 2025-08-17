@@ -55,10 +55,14 @@
 <body class="bg-gray-900 text-gray-200 p-4 md:p-8">
 
     <div class="max-w-6xl mx-auto bg-gray-800 p-6 md:p-10 rounded-3xl shadow-2xl">
-        <header class="text-center mb-6">
+        <header class="text-center mb-6 relative">
             <h1 class="text-3xl font-bold text-amber-500">Panel Admin</h1>
             <p class="text-md text-gray-400">Kelola Produk dan Testimoni Anda</p>
             <p id="user-id" class="mt-2 text-xs text-gray-500 break-all"></p>
+            <!-- Tombol Logout -->
+            <button id="logout-btn" class="absolute top-2 right-2 p-2 bg-gray-700 text-gray-200 rounded-lg hover:bg-red-500 transition-colors hidden">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-log-out"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+            </button>
         </header>
 
         <!-- Loading state -->
@@ -217,7 +221,7 @@
     <!-- Script Firebase -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, doc, setDoc, deleteDoc, onSnapshot, query, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Firebase Config Anda
@@ -247,11 +251,13 @@
         const adminContent = document.getElementById('admin-content');
         const loadingContainer = document.getElementById('loading-container');
         const userIdDisplay = document.getElementById('user-id');
+        const logoutBtn = document.getElementById('logout-btn');
         
         onAuthStateChanged(auth, async (user) => {
             if (user && user.uid === ADMIN_UID) {
                 userId = user.uid;
                 userIdDisplay.textContent = `User ID: ${userId}`;
+                logoutBtn.classList.remove('hidden');
                 loadingContainer.classList.add('hidden');
                 loginContainer.classList.add('hidden');
                 adminContent.classList.remove('hidden');
@@ -259,6 +265,7 @@
                 listenForProducts();
                 listenForTestimonials();
             } else {
+                logoutBtn.classList.add('hidden');
                 loadingContainer.classList.add('hidden');
                 loginContainer.classList.remove('hidden');
                 adminContent.classList.add('hidden');
@@ -277,7 +284,7 @@
                 if (userCredential.user.uid === ADMIN_UID) {
                     showModal('Sukses', 'Login berhasil!');
                 } else {
-                    await auth.signOut();
+                    await signOut(auth);
                     loadingContainer.classList.add('hidden');
                     loginContainer.classList.remove('hidden');
                     showModal('Akses Ditolak', 'Anda tidak memiliki hak akses admin.');
@@ -287,6 +294,16 @@
                 loadingContainer.classList.add('hidden');
                 loginContainer.classList.remove('hidden');
                 showModal('Gagal Login', 'Email atau kata sandi salah. Silakan coba lagi.');
+            }
+        });
+        
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+                showModal('Info', 'Anda telah berhasil logout.');
+            } catch (error) {
+                console.error("Error signing out:", error);
+                showModal('Error', 'Gagal logout. Silakan coba lagi.');
             }
         });
 
@@ -490,6 +507,8 @@
             const productId = productIdInput.value;
             try {
                 if (productId) {
+                    // Update the timestamp for the existing document as well
+                    productData.timestamp = serverTimestamp();
                     await setDoc(doc(db, `products`, productId), productData);
                     showModal('Sukses', 'Produk berhasil diperbarui!');
                 } else {
