@@ -563,6 +563,12 @@
                     }
                 });
 
+                // Mengurutkan produk secara abjad (A-Z)
+                fetchedProducts.kopi.arabika.sort((a, b) => a.name.localeCompare(b.name));
+                fetchedProducts.kopi.robusta.sort((a, b) => a.name.localeCompare(b.name));
+                fetchedProducts.makanan.sort((a, b) => a.name.localeCompare(b.name));
+                fetchedProducts.minuman.sort((a, b) => a.name.localeCompare(b.name));
+
                 products = fetchedProducts;
                 loadingMessage.classList.add('hidden');
                 console.log("Products loaded from Firestore:", products);
@@ -799,6 +805,9 @@
                 const productName = product.name.toLowerCase();
                 return productName.includes(lowerCaseQuery);
             });
+            
+            // Urutkan hasil pencarian secara abjad
+            filteredProducts.sort((a, b) => a.name.localeCompare(b.name));
 
             if (filteredProducts.length > 0) {
                 searchResultsMessage.textContent = `${filteredProducts.length} produk ditemukan.`;
@@ -1115,4 +1124,3 @@
     </script>
 </body>
 </html>
-
