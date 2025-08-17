@@ -47,6 +47,9 @@
         .table-container {
             overflow-x: auto;
         }
+        .sortable-header {
+            cursor: pointer;
+        }
     </style>
 </head>
 <body class="bg-gray-900 text-gray-200 p-4 md:p-8">
@@ -152,8 +155,19 @@
                     <table class="w-full text-left table-auto">
                         <thead>
                             <tr class="bg-gray-700 text-gray-400 uppercase text-xs leading-normal">
-                                <th class="py-3 px-6">Nama</th>
+                                <th class="py-3 px-6 sortable-header" data-sort-column="name">
+                                    <div class="flex items-center space-x-1">
+                                        <span>Nama</span>
+                                        <span id="name-sort-indicator"></span>
+                                    </div>
+                                </th>
                                 <th class="py-3 px-6">Kategori</th>
+                                <th class="py-3 px-6 sortable-header" data-sort-column="timestamp">
+                                    <div class="flex items-center space-x-1">
+                                        <span>Waktu Terakhir Ditambahkan</span>
+                                        <span id="timestamp-sort-indicator"></span>
+                                    </div>
+                                </th>
                                 <th class="py-3 px-6">Aksi</th>
                             </tr>
                         </thead>
@@ -204,7 +218,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, doc, setDoc, deleteDoc, onSnapshot, query, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, doc, setDoc, deleteDoc, onSnapshot, query, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Firebase Config Anda
         const firebaseConfig = {
@@ -225,6 +239,8 @@
         const db = getFirestore(app);
         let userId;
         let productsData = []; // Variabel untuk menyimpan data produk
+        let currentSortColumn = 'name';
+        let currentSortDirection = 'asc';
 
         const loginForm = document.getElementById('login-form');
         const loginContainer = document.getElementById('login-container');
@@ -300,6 +316,9 @@
         const modalTitle = document.getElementById('modal-title');
         const modalMessage = document.getElementById('modal-message');
         const modalCloseBtn = document.getElementById('modal-close-btn');
+        
+        const nameSortIndicator = document.getElementById('name-sort-indicator');
+        const timestampSortIndicator = document.getElementById('timestamp-sort-indicator');
 
         function showModal(title, message) {
             modalTitle.textContent = title;
@@ -348,9 +367,13 @@
             products.forEach(product => {
                 const row = document.createElement('tr');
                 row.className = 'border-b border-gray-700 hover:bg-gray-700 transition-colors';
+                
+                const timestamp = product.timestamp ? new Date(product.timestamp.seconds * 1000).toLocaleString() : 'N/A';
+                
                 row.innerHTML = `
                     <td class="py-3 px-6">${product.name}</td>
                     <td class="py-3 px-6">${product.category}${product.subCategory ? ` (${product.subCategory})` : ''}</td>
+                    <td class="py-3 px-6">${timestamp}</td>
                     <td class="py-3 px-6 flex space-x-2">
                         <button data-id="${product.id}" class="edit-product-btn bg-yellow-500 text-white px-3 py-1 rounded-lg text-xs hover:bg-yellow-600">Edit</button>
                         <button data-id="${product.id}" class="delete-product-btn bg-red-500 text-white px-3 py-1 rounded-lg text-xs hover:bg-red-600">Hapus</button>
@@ -360,14 +383,47 @@
             });
         }
         
-        // Fungsi untuk memperbarui UI produk berdasarkan data dan filter pencarian
+        // Fungsi untuk memperbarui UI produk berdasarkan data, filter, dan pengurutan
         function updateProductUI() {
             const query = searchProductInput.value.toLowerCase();
-            const filteredProducts = productsData.filter(product => 
+            let filteredProducts = productsData.filter(product => 
                 product.name.toLowerCase().includes(query) ||
                 (product.category && product.category.toLowerCase().includes(query))
             );
+            
+            filteredProducts.sort((a, b) => {
+                const aValue = a[currentSortColumn];
+                const bValue = b[currentSortColumn];
+                
+                if (currentSortColumn === 'name') {
+                    return currentSortDirection === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+                } else if (currentSortColumn === 'timestamp') {
+                    // Treat null/undefined timestamps as the oldest for sorting
+                    const aTimestamp = aValue ? aValue.seconds : 0;
+                    const bTimestamp = bValue ? bValue.seconds : 0;
+                    const result = aTimestamp - bTimestamp;
+                    return currentSortDirection === 'asc' ? result : -result;
+                }
+                return 0;
+            });
+            
             renderProductList(filteredProducts);
+            updateSortIndicators();
+        }
+        
+        function updateSortIndicators() {
+            const sortIndicators = {
+                name: nameSortIndicator,
+                timestamp: timestampSortIndicator
+            };
+
+            for (const key in sortIndicators) {
+                if (key === currentSortColumn) {
+                    sortIndicators[key].innerHTML = currentSortDirection === 'asc' ? '&#9650;' : '&#9660;';
+                } else {
+                    sortIndicators[key].innerHTML = '';
+                }
+            }
         }
 
         function listenForProducts() {
@@ -384,6 +440,20 @@
         // Tambahkan event listener untuk input pencarian produk
         searchProductInput.addEventListener('input', updateProductUI);
         
+        // Tambahkan event listener untuk header tabel yang dapat diurutkan
+        document.querySelectorAll('.sortable-header').forEach(header => {
+            header.addEventListener('click', (event) => {
+                const newSortColumn = event.currentTarget.dataset.sortColumn;
+                if (newSortColumn === currentSortColumn) {
+                    currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+                } else {
+                    currentSortColumn = newSortColumn;
+                    currentSortDirection = 'asc';
+                }
+                updateProductUI();
+            });
+        });
+
         productForm.addEventListener('submit', async (event) => {
             event.preventDefault();
 
@@ -406,7 +476,7 @@
                      showModal('Error', 'Silakan tambahkan setidaknya satu varian produk kopi.');
                      return;
                 }
-                productData = { name, category, subCategory, isBestSeller, options };
+                productData = { name, category, subCategory, isBestSeller, options, timestamp: serverTimestamp() };
             } else {
                 const price = parseInt(productPriceInput.value, 10);
                 const shopeeLink = productShopeeLinkInput.value.trim();
@@ -414,7 +484,7 @@
                     showModal('Error', 'Harga harus berupa angka.');
                     return;
                 }
-                productData = { name, category, isBestSeller, price, shopeeLink };
+                productData = { name, category, isBestSeller, price, shopeeLink, timestamp: serverTimestamp() };
             }
 
             const productId = productIdInput.value;
@@ -574,4 +644,3 @@
     </script>
 </body>
 </html>
-
