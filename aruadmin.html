@@ -50,6 +50,21 @@
         .sortable-header {
             cursor: pointer;
         }
+        /* Styling for pagination buttons */
+        .pagination-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            background-color: #374151; /* gray-700 */
+            color: #e0e0e0;
+            transition: background-color 0.2s;
+        }
+        .pagination-btn:hover:not(:disabled) {
+            background-color: #4b5563; /* gray-600 */
+        }
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body class="bg-gray-900 text-gray-200 p-4 md:p-8">
@@ -116,10 +131,10 @@
                                 <option value="Robusta">Robusta</option>
                             </select>
                         </div>
-                        <div id="options-container" class="space-y-2">
+                        <div id="options-container" class="space-y-2 mt-4">
                             <!-- Options will be added dynamically here -->
                         </div>
-                        <button type="button" id="add-option-btn" class="bg-blue-500 text-white py-2 px-4 rounded-lg text-sm">Tambah Varian</button>
+                        <button type="button" id="add-option-btn" class="mt-2 bg-blue-500 text-white py-2 px-4 rounded-lg text-sm hover:bg-blue-600 transition-colors">Tambah Varian</button>
                     </div>
                     
                     <!-- Form untuk Kategori Makanan & Minuman -->
@@ -179,6 +194,10 @@
                             <!-- Products will be listed here -->
                         </tbody>
                     </table>
+                    <!-- Pagination Controls -->
+                    <div id="pagination-controls" class="mt-4 flex justify-between items-center text-sm">
+                        <!-- Pagination will be rendered here by JS -->
+                    </div>
                 </div>
             </section>
             
@@ -242,10 +261,15 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         let userId;
+        
+        // --- State Variables ---
         let productsData = []; // Variabel untuk menyimpan data produk
         let currentSortColumn = 'name';
         let currentSortDirection = 'asc';
+        let currentPage = 1;
+        const rowsPerPage = 10;
 
+        // --- DOM Elements ---
         const loginForm = document.getElementById('login-form');
         const loginContainer = document.getElementById('login-container');
         const adminContent = document.getElementById('admin-content');
@@ -253,6 +277,38 @@
         const userIdDisplay = document.getElementById('user-id');
         const logoutBtn = document.getElementById('logout-btn');
         
+        const productForm = document.getElementById('product-form');
+        const productIdInput = document.getElementById('product-id');
+        const productNameInput = document.getElementById('product-name');
+        const productCategorySelect = document.getElementById('product-category');
+        const coffeeFields = document.getElementById('coffee-fields');
+        const nonCoffeeFields = document.getElementById('non-coffee-fields');
+        const productPriceInput = document.getElementById('product-price');
+        const productShopeeLinkInput = document.getElementById('product-shopee-link');
+        const productSubCategorySelect = document.getElementById('product-sub-category');
+        const productIsBestSellerCheckbox = document.getElementById('product-is-best-seller');
+        const optionsContainer = document.getElementById('options-container');
+        const addOptionBtn = document.getElementById('add-option-btn');
+        const productListTable = document.getElementById('product-list');
+        const cancelEditBtn = document.getElementById('cancel-edit-btn');
+        const searchProductInput = document.getElementById('search-product-input');
+        const paginationControls = document.getElementById('pagination-controls');
+        
+        const testimonialForm = document.getElementById('testimonial-form');
+        const testimonialIdInput = document.getElementById('testimonial-id');
+        const testimonialUrlInput = document.getElementById('testimonial-url');
+        const testimonialListDiv = document.getElementById('testimonial-list');
+        const cancelTestimonialEditBtn = document.getElementById('cancel-testimonial-edit-btn');
+        
+        const modal = document.getElementById('modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalMessage = document.getElementById('modal-message');
+        const modalCloseBtn = document.getElementById('modal-close-btn');
+        
+        const nameSortIndicator = document.getElementById('name-sort-indicator');
+        const timestampSortIndicator = document.getElementById('timestamp-sort-indicator');
+
+        // --- Auth Logic ---
         onAuthStateChanged(auth, async (user) => {
             if (user && user.uid === ADMIN_UID) {
                 userId = user.uid;
@@ -307,46 +363,17 @@
             }
         });
 
-        const productForm = document.getElementById('product-form');
-        const productIdInput = document.getElementById('product-id');
-        const productNameInput = document.getElementById('product-name');
-        const productCategorySelect = document.getElementById('product-category');
-        const coffeeFields = document.getElementById('coffee-fields');
-        const nonCoffeeFields = document.getElementById('non-coffee-fields');
-        const productPriceInput = document.getElementById('product-price');
-        const productShopeeLinkInput = document.getElementById('product-shopee-link');
-        const productSubCategorySelect = document.getElementById('product-sub-category');
-        const productIsBestSellerCheckbox = document.getElementById('product-is-best-seller');
-        const optionsContainer = document.getElementById('options-container');
-        const addOptionBtn = document.getElementById('add-option-btn');
-        const productListTable = document.getElementById('product-list');
-        const cancelEditBtn = document.getElementById('cancel-edit-btn');
-        const searchProductInput = document.getElementById('search-product-input');
-        
-        const testimonialForm = document.getElementById('testimonial-form');
-        const testimonialIdInput = document.getElementById('testimonial-id');
-        const testimonialUrlInput = document.getElementById('testimonial-url');
-        const testimonialListDiv = document.getElementById('testimonial-list');
-        const cancelTestimonialEditBtn = document.getElementById('cancel-testimonial-edit-btn');
-        
-        const modal = document.getElementById('modal');
-        const modalTitle = document.getElementById('modal-title');
-        const modalMessage = document.getElementById('modal-message');
-        const modalCloseBtn = document.getElementById('modal-close-btn');
-        
-        const nameSortIndicator = document.getElementById('name-sort-indicator');
-        const timestampSortIndicator = document.getElementById('timestamp-sort-indicator');
-
+        // --- Modal Logic ---
         function showModal(title, message) {
             modalTitle.textContent = title;
             modalMessage.textContent = message;
             modal.classList.remove('hidden');
         }
-
         modalCloseBtn.addEventListener('click', () => {
             modal.classList.add('hidden');
         });
 
+        // --- Product Form Logic ---
         function updateFormFields(category) {
             if (category === 'Kopi') {
                 coffeeFields.classList.remove('hidden');
@@ -365,11 +392,11 @@
         
         function createOptionInput(option = { name: '', price: '' }) {
             const optionGroup = document.createElement('div');
-            optionGroup.className = 'input-group space-y-2 md:space-y-0';
+            optionGroup.className = 'input-group';
             optionGroup.innerHTML = `
-                <input type="text" value="${option.name}" placeholder="Nama Varian (contoh: 100g)" class="option-name flex-1 bg-gray-700 text-gray-200 border border-gray-600 rounded-lg p-3">
-                <input type="number" value="${option.price}" placeholder="Harga (contoh: 30000)" class="option-price flex-1 bg-gray-700 text-gray-200 border border-gray-600 rounded-lg p-3">
-                <button type="button" class="remove-option-btn text-red-500 hover:text-red-400 p-2"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+                <input type="text" value="${option.name}" placeholder="Nama Varian (cth: 100g)" class="option-name flex-1 bg-gray-700 text-gray-200 border border-gray-600 rounded-lg p-3">
+                <input type="number" value="${option.price}" placeholder="Harga (cth: 30000)" class="option-price flex-1 bg-gray-700 text-gray-200 border border-gray-600 rounded-lg p-3">
+                <button type="button" class="remove-option-btn text-red-500 hover:text-red-400 p-2 flex-shrink-0 rounded-full hover:bg-gray-700 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
             `;
             optionsContainer.appendChild(optionGroup);
             optionGroup.querySelector('.remove-option-btn').addEventListener('click', () => {
@@ -378,15 +405,17 @@
         }
         addOptionBtn.addEventListener('click', () => createOptionInput());
         
-        // Fungsi untuk merender daftar produk ke tabel
+        // --- Product List Rendering, Sorting, Filtering, and Pagination ---
         function renderProductList(products) {
             productListTable.innerHTML = '';
+            if (products.length === 0) {
+                productListTable.innerHTML = `<tr><td colspan="4" class="text-center py-4">Tidak ada produk yang ditemukan.</td></tr>`;
+                return;
+            }
             products.forEach(product => {
                 const row = document.createElement('tr');
                 row.className = 'border-b border-gray-700 hover:bg-gray-700 transition-colors';
-                
-                const timestamp = product.timestamp ? new Date(product.timestamp.seconds * 1000).toLocaleString() : 'N/A';
-                
+                const timestamp = product.timestamp ? new Date(product.timestamp.seconds * 1000).toLocaleString('id-ID') : 'N/A';
                 row.innerHTML = `
                     <td class="py-3 px-6">${product.name}</td>
                     <td class="py-3 px-6">${product.category}${product.subCategory ? ` (${product.subCategory})` : ''}</td>
@@ -400,22 +429,59 @@
             });
         }
         
-        // Fungsi untuk memperbarui UI produk berdasarkan data, filter, dan pengurutan
+        function renderPaginationControls(totalItems) {
+            paginationControls.innerHTML = '';
+            const totalPages = Math.ceil(totalItems / rowsPerPage);
+
+            if (totalPages <= 1) return;
+
+            // Previous Button
+            const prevButton = document.createElement('button');
+            prevButton.textContent = 'Sebelumnya';
+            prevButton.className = 'pagination-btn';
+            prevButton.disabled = currentPage === 1;
+            prevButton.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    updateProductUI();
+                }
+            });
+
+            // Page Info
+            const pageInfo = document.createElement('span');
+            pageInfo.textContent = `Halaman ${currentPage} dari ${totalPages}`;
+            pageInfo.className = 'text-gray-400';
+
+            // Next Button
+            const nextButton = document.createElement('button');
+            nextButton.textContent = 'Berikutnya';
+            nextButton.className = 'pagination-btn';
+            nextButton.disabled = currentPage === totalPages;
+            nextButton.addEventListener('click', () => {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    updateProductUI();
+                }
+            });
+            
+            paginationControls.append(prevButton, pageInfo, nextButton);
+        }
+
         function updateProductUI() {
+            // 1. Filter
             const query = searchProductInput.value.toLowerCase();
             let filteredProducts = productsData.filter(product => 
                 product.name.toLowerCase().includes(query) ||
                 (product.category && product.category.toLowerCase().includes(query))
             );
             
+            // 2. Sort
             filteredProducts.sort((a, b) => {
                 const aValue = a[currentSortColumn];
                 const bValue = b[currentSortColumn];
-                
                 if (currentSortColumn === 'name') {
                     return currentSortDirection === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
                 } else if (currentSortColumn === 'timestamp') {
-                    // Treat null/undefined timestamps as the oldest for sorting
                     const aTimestamp = aValue ? aValue.seconds : 0;
                     const bTimestamp = bValue ? bValue.seconds : 0;
                     const result = aTimestamp - bTimestamp;
@@ -424,29 +490,32 @@
                 return 0;
             });
             
-            renderProductList(filteredProducts);
+            // 3. Paginate
+            const startIndex = (currentPage - 1) * rowsPerPage;
+            const endIndex = startIndex + rowsPerPage;
+            const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
+            
+            // 4. Render
+            renderProductList(paginatedProducts);
+            renderPaginationControls(filteredProducts.length);
             updateSortIndicators();
         }
         
         function updateSortIndicators() {
-            const sortIndicators = {
-                name: nameSortIndicator,
-                timestamp: timestampSortIndicator
-            };
-
-            for (const key in sortIndicators) {
-                if (key === currentSortColumn) {
-                    sortIndicators[key].innerHTML = currentSortDirection === 'asc' ? '&#9650;' : '&#9660;';
-                } else {
-                    sortIndicators[key].innerHTML = '';
-                }
-            }
+            [nameSortIndicator, timestampSortIndicator].forEach(el => el.innerHTML = '');
+            const activeIndicator = currentSortColumn === 'name' ? nameSortIndicator : timestampSortIndicator;
+            activeIndicator.innerHTML = currentSortDirection === 'asc' ? '&#9650;' : '&#9660;';
         }
 
         function listenForProducts() {
             const productsCollectionRef = collection(db, `products`);
             onSnapshot(query(productsCollectionRef), (snapshot) => {
                 productsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                // Reset to page 1 if current page becomes invalid after data change
+                const totalPages = Math.ceil(productsData.length / rowsPerPage);
+                if(currentPage > totalPages) {
+                    currentPage = totalPages > 0 ? totalPages : 1;
+                }
                 updateProductUI();
             }, (error) => {
                 console.error("Error fetching products:", error);
@@ -454,10 +523,11 @@
             });
         }
         
-        // Tambahkan event listener untuk input pencarian produk
-        searchProductInput.addEventListener('input', updateProductUI);
+        searchProductInput.addEventListener('input', () => {
+            currentPage = 1; // Reset to first page on search
+            updateProductUI();
+        });
         
-        // Tambahkan event listener untuk header tabel yang dapat diurutkan
         document.querySelectorAll('.sortable-header').forEach(header => {
             header.addEventListener('click', (event) => {
                 const newSortColumn = event.currentTarget.dataset.sortColumn;
@@ -467,19 +537,19 @@
                     currentSortColumn = newSortColumn;
                     currentSortDirection = 'asc';
                 }
+                currentPage = 1; // Reset to first page on sort
                 updateProductUI();
             });
         });
 
+        // --- CRUD Logic ---
         productForm.addEventListener('submit', async (event) => {
             event.preventDefault();
-
+            // ... (rest of the submit logic is unchanged)
             const name = productNameInput.value.trim();
             const category = productCategorySelect.value;
             const isBestSeller = productIsBestSellerCheckbox.checked;
-            
             let productData;
-            
             if (category === 'Kopi') {
                 const subCategory = productSubCategorySelect.value;
                 const optionElements = optionsContainer.querySelectorAll('.input-group');
@@ -507,7 +577,6 @@
             const productId = productIdInput.value;
             try {
                 if (productId) {
-                    // Update the timestamp for the existing document as well
                     productData.timestamp = serverTimestamp();
                     await setDoc(doc(db, `products`, productId), productData);
                     showModal('Sukses', 'Produk berhasil diperbarui!');
@@ -531,6 +600,7 @@
             const productId = target.dataset.id;
             
             if (target.classList.contains('edit-product-btn')) {
+                // ... (rest of the edit logic is unchanged)
                 const productsCollectionRef = collection(db, `products`);
                 const snapshot = await getDocs(query(productsCollectionRef));
                 const productDoc = snapshot.docs.find(doc => doc.id === productId);
@@ -555,6 +625,7 @@
                     productShopeeLinkInput.value = product.shopeeLink || '';
                 }
                 cancelEditBtn.classList.remove('hidden');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             } else if (target.classList.contains('delete-product-btn')) {
                 if (confirm('Apakah Anda yakin ingin menghapus produk ini?')) {
                     try {
@@ -576,6 +647,7 @@
             cancelEditBtn.classList.add('hidden');
         });
         
+        // --- Testimonial Logic (Unchanged) ---
         function listenForTestimonials() {
             const testimonialsCollectionRef = collection(db, `testimonials`);
             onSnapshot(query(testimonialsCollectionRef), (snapshot) => {
@@ -585,9 +657,9 @@
                     const div = document.createElement('div');
                     div.className = 'relative group';
                     div.innerHTML = `
-                        <img src="${testimonial.url}" alt="Testimoni" class="w-full h-auto rounded-lg">
+                        <img src="${testimonial.url}" alt="Testimoni" class="w-full h-auto rounded-lg object-cover aspect-square">
                         <div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity space-x-2">
-                            <button data-id="${testimonial.id}" class="edit-testimonial-btn bg-yellow-500 text-white p-2 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pencil"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg></button>
+                            <button data-id="${testimonial.id}" data-url="${testimonial.url}" class="edit-testimonial-btn bg-yellow-500 text-white p-2 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pencil"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg></button>
                             <button data-id="${testimonial.id}" class="delete-testimonial-btn bg-red-500 text-white p-2 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucude-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg></button>
                         </div>
                     `;
@@ -601,12 +673,9 @@
         
         testimonialForm.addEventListener('submit', async (event) => {
             event.preventDefault();
-
             const url = testimonialUrlInput.value.trim();
-
             const testimonialData = { url };
             const testimonialId = testimonialIdInput.value;
-
             try {
                 if (testimonialId) {
                     await setDoc(doc(db, `testimonials`, testimonialId), testimonialData);
@@ -627,18 +696,10 @@
         testimonialListDiv.addEventListener('click', async (event) => {
             const target = event.target.closest('button');
             if (!target) return;
-
             const testimonialId = target.dataset.id;
-            
             if (target.classList.contains('edit-testimonial-btn')) {
-                const testimonialsCollectionRef = collection(db, `testimonials`);
-                const snapshot = await getDocs(query(testimonialsCollectionRef));
-                const testimonialDoc = snapshot.docs.find(doc => doc.id === testimonialId);
-                if (!testimonialDoc) return;
-                const testimonial = testimonialDoc.data();
-                
                 testimonialIdInput.value = testimonialId;
-                testimonialUrlInput.value = testimonial.url;
+                testimonialUrlInput.value = target.dataset.url;
                 cancelTestimonialEditBtn.classList.remove('hidden');
             } else if (target.classList.contains('delete-testimonial-btn')) {
                 if (confirm('Apakah Anda yakin ingin menghapus testimoni ini?')) {
@@ -659,6 +720,7 @@
             cancelTestimonialEditBtn.classList.add('hidden');
         });
         
+        // --- Initial Setup ---
         updateFormFields(productCategorySelect.value);
     </script>
 </body>
