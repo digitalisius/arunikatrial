@@ -84,17 +84,9 @@
                     <i data-feather="file-text" class="w-4 h-4"></i>
                     <span>Laporan</span>
                 </button>
-                <button onclick="window.app.showPage('dukungan')" class="nav-btn group flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-300 text-gray-600 hover:bg-gray-100">
-                    <i data-feather="gift" class="w-4 h-4"></i>
-                    <span>Dukung Kami</span>
-                </button>
-                 <button onclick="window.app.showPage('leaderboard')" class="nav-btn group flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-300 text-gray-600 hover:bg-gray-100">
-                    <i data-feather="bar-chart-2" class="w-4 h-4"></i>
-                    <span>Leaderboard</span>
-                </button>
-                 <button onclick="window.app.showPage('review')" class="nav-btn group flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-300 text-gray-600 hover:bg-gray-100">
-                    <i data-feather="star" class="w-4 h-4"></i>
-                    <span>Review</span>
+                <button onclick="window.app.showPage('lainnya')" class="nav-btn group flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-300 text-gray-600 hover:bg-gray-100">
+                    <i data-feather="more-horizontal" class="w-4 h-4"></i>
+                    <span>Lainnya</span>
                 </button>
                  <button id="logout-btn" class="group flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-300 text-red-500 hover:bg-red-50">
                     <i data-feather="log-out" class="w-4 h-4"></i>
@@ -314,6 +306,44 @@
                     </div>
                 </div>
             </div>
+             <!-- NEW "More" page -->
+            <div id="lainnya-page" class="page hidden">
+                <div class="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-200/80">
+                    <h2 class="text-xl font-bold mb-6 text-gray-800">Menu Lainnya</h2>
+                    <div class="space-y-4">
+                        <button onclick="window.app.showPage('dukungan')" class="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors duration-200 text-left">
+                            <div class="flex items-center space-x-4">
+                                <div class="p-2 bg-indigo-100 rounded-full"><i data-feather="gift" class="w-6 h-6 text-indigo-500"></i></div>
+                                <div>
+                                    <p class="font-semibold text-gray-700">Dukung Kami</p>
+                                    <p class="text-sm text-gray-500">Bantu pengembangan aplikasi ini</p>
+                                </div>
+                            </div>
+                            <i data-feather="chevron-right" class="w-5 h-5 text-gray-400"></i>
+                        </button>
+                        <button onclick="window.app.showPage('leaderboard')" class="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors duration-200 text-left">
+                            <div class="flex items-center space-x-4">
+                                <div class="p-2 bg-green-100 rounded-full"><i data-feather="bar-chart-2" class="w-6 h-6 text-green-500"></i></div>
+                                <div>
+                                    <p class="font-semibold text-gray-700">Leaderboard</p>
+                                    <p class="text-sm text-gray-500">Lihat peringkat pengguna (segera hadir)</p>
+                                </div>
+                            </div>
+                            <i data-feather="chevron-right" class="w-5 h-5 text-gray-400"></i>
+                        </button>
+                        <button onclick="window.app.showPage('review')" class="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors duration-200 text-left">
+                            <div class="flex items-center space-x-4">
+                                <div class="p-2 bg-yellow-100 rounded-full"><i data-feather="star" class="w-6 h-6 text-yellow-500"></i></div>
+                                <div>
+                                    <p class="font-semibold text-gray-700">Kritik & Saran</p>
+                                    <p class="text-sm text-gray-500">Beri kami masukan Anda</p>
+                                </div>
+                            </div>
+                            <i data-feather="chevron-right" class="w-5 h-5 text-gray-400"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
             <div id="dukungan-page" class="page hidden">
                  <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200/80">
                     <h2 class="text-2xl font-bold text-center mb-4 text-indigo-600">Dukung Pengembangan Aplikasi</h2>
@@ -362,9 +392,9 @@
                 <i data-feather="file-text" class="w-5 h-5 mb-1"></i>
                 <span class="text-xs font-medium">Laporan</span>
             </button>
-            <button onclick="window.app.showPage('dukungan')" class="bottom-nav-btn flex flex-col items-center justify-center text-gray-600 hover:text-indigo-600 p-2 w-full rounded-lg">
-                <i data-feather="gift" class="w-5 h-5 mb-1"></i>
-                <span class="text-xs font-medium">Dukung</span>
+            <button onclick="window.app.showPage('lainnya')" class="bottom-nav-btn flex flex-col items-center justify-center text-gray-600 hover:text-indigo-600 p-2 w-full rounded-lg">
+                <i data-feather="menu" class="w-5 h-5 mb-1"></i>
+                <span class="text-xs font-medium">Lainnya</span>
             </button>
             <button id="logout-btn-mobile" class="bottom-nav-btn flex flex-col items-center justify-center text-gray-600 hover:text-red-600 p-2 w-full rounded-lg">
                 <i data-feather="log-out" class="w-5 h-5 mb-1"></i>
