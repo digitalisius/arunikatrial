@@ -2,8 +2,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebas
 import { getAuth } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
 
-// --- KONFIGURASI ---
-const firebaseConfig = {
+// Your web app's Firebase configuration
+export const firebaseConfig = {
     apiKey: "AIzaSyDriwT4n_ntiyhm14ZW6WXxAV-5f5wkcwQ",
     authDomain: "dompet-hanjaya.firebaseapp.com",
     projectId: "dompet-hanjaya",
@@ -15,7 +15,7 @@ const firebaseConfig = {
 export const CLOUDINARY_CLOUD_NAME = 'dtvmbvwtx';
 export const CLOUDINARY_UPLOAD_PRESET = 'dompet';
 
-// --- INISIALISASI ---
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
