@@ -10,7 +10,7 @@ const formatRupiah = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', 
 
 // --- PAGE & FORM SWITCHING ---
 export const showPage = (pageId, transactions, editingTransactionId) => {
-    // Kembali ke atas halaman setiap kali pindah halaman
+    // [FIXED] Kembali ke atas halaman setiap kali pindah halaman
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
     document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
@@ -215,7 +215,7 @@ const renderPaginationControls = (totalPages, currentPage) => {
 const renderRecentTransactions = (transactions) => {
     const recentList = document.getElementById('recent-transactions-list');
     recentList.innerHTML = '';
-    const sortedForRecent = transactions.slice().sort((a, b) => (b.createdAt || b.tanggal) - (a.createdAt || b.tanggal));
+    const sortedForRecent = transactions.slice().sort((a, b) => (b.createdAt || b.tanggal) - (a.createdAt || a.tanggal));
 
     if (transactions.length === 0) {
         recentList.innerHTML = `<p class="text-gray-500 text-center py-4">Belum ada aktivitas.</p>`;
