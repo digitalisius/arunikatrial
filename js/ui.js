@@ -1,4 +1,7 @@
 export function showPage(pageId) {
+    // Tambahkan baris ini untuk membuat halaman scroll ke atas secara otomatis
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
     document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
     const currentPageEl = document.getElementById(pageId + '-page');
     if (currentPageEl) {
