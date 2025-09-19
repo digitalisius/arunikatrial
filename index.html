@@ -95,7 +95,6 @@
         </header>
 
         <main>
-            <!-- ... existing main content ... -->
             <div id="beranda-page" class="page">
                 <div class="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-200/80 mb-6">
                     <p id="motivational-message" class="text-center font-medium text-gray-700"></p>
@@ -316,17 +315,7 @@
                                 <div class="p-2 bg-indigo-100 rounded-full"><i data-feather="gift" class="w-6 h-6 text-indigo-500"></i></div>
                                 <div>
                                     <p class="font-semibold text-gray-700">Dukung Kami</p>
-                                    <p class="text-sm text-gray-500">Bantu pengembangan aplikasi ini</p>
-                                </div>
-                            </div>
-                            <i data-feather="chevron-right" class="w-5 h-5 text-gray-400"></i>
-                        </button>
-                        <button onclick="window.app.showPage('leaderboard')" class="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors duration-200 text-left">
-                            <div class="flex items-center space-x-4">
-                                <div class="p-2 bg-green-100 rounded-full"><i data-feather="bar-chart-2" class="w-6 h-6 text-green-500"></i></div>
-                                <div>
-                                    <p class="font-semibold text-gray-700">Leaderboard</p>
-                                    <p class="text-sm text-gray-500">Lihat peringkat pengguna (segera hadir)</p>
+                                    <p class="text-sm text-gray-500">Bantu pengembangan & lihat leaderboard</p>
                                 </div>
                             </div>
                             <i data-feather="chevron-right" class="w-5 h-5 text-gray-400"></i>
@@ -351,22 +340,22 @@
                         Aplikasi ini dikembangkan dengan cinta dan dedikasi. Jika Anda merasa aplikasi ini bermanfaat, Anda dapat memberikan dukungan melalui platform di bawah ini. Setiap dukungan Anda sangat berarti bagi kami untuk terus mengembangkan fitur-fitur baru. Terima kasih!
                     </p>
                     <div class="flex flex-col sm:flex-row justify-center items-center gap-6">
-                        <a href="https://saweria.co/" target="_blank" class="flex flex-col items-center p-6 bg-yellow-50 hover:bg-yellow-100 rounded-lg transition-all duration-300 border border-yellow-200 w-full sm:w-auto">
+                        <a href="https://saweria.co/jelipopo" target="_blank" class="flex flex-col items-center p-6 bg-yellow-50 hover:bg-yellow-100 rounded-lg transition-all duration-300 border border-yellow-200 w-full sm:w-auto">
                            <img src="https://saweria.co/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fhomepage_characters.a1cf6cc4.svg&w=3840&q=75" alt="Saweria Logo" class="h-12 mb-3">
                            <span class="font-semibold text-yellow-800">Dukung via Saweria</span>
                         </a>
-                        <a href="https://sociabuzz.com/" target="_blank" class="flex flex-col items-center p-6 bg-pink-50 hover:bg-pink-100 rounded-lg transition-all duration-300 border border-pink-200 w-full sm:w-auto">
+                        <a href="https://sociabuzz.com/arunika_group/tribe" target="_blank" class="flex flex-col items-center p-6 bg-pink-50 hover:bg-pink-100 rounded-lg transition-all duration-300 border border-pink-200 w-full sm:w-auto">
                             <img src="https://storage.sociabuzz.com/storage/landingpage/img/sociabuzz-logo.png" alt="Sociabuzz Logo" class="h-12 mb-3">
                            <span class="font-semibold text-pink-800">Dukung via Sociabuzz</span>
                         </a>
                     </div>
-                </div>
-            </div>
-            <div id="leaderboard-page" class="page hidden">
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200/80 text-center">
-                    <i data-feather="bar-chart-2" class="w-16 h-16 mx-auto text-indigo-400 mb-4"></i>
-                    <h2 class="text-2xl font-bold mb-2">Leaderboard</h2>
-                    <p class="text-gray-600">Fitur ini sedang dalam pengembangan dan akan segera hadir. Nantikan!</p>
+                    <div class="mt-8 border-t pt-6 text-center">
+                        <h3 class="text-xl font-bold text-gray-700 mb-4">Papan Peringkat Donatur</h3>
+                        <a href="https://saweria.co/widgets/leaderboard?streamKey=0c4a9e236839756c1b57b7f3af0762d0" target="_blank" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg transition-all duration-300">
+                            <i data-feather="award" class="w-5 h-5"></i>
+                            <span>Lihat Leaderboard Saweria</span>
+                        </a>
+                    </div>
                 </div>
             </div>
             <div id="review-page" class="page hidden">
@@ -404,7 +393,6 @@
     </div>
 
     <!-- Modals -->
-    <!-- ... existing modals ... -->
     <div id="detail-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50 hidden">
         <div class="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto p-6 relative animate-scale-in">
             <button id="close-modal-btn" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700"><i data-feather="x" class="w-6 h-6"></i></button>
