@@ -4,8 +4,8 @@
 import { auth, db } from './firebase-config.js';
 import { initAuth, logOut, inactivityLogout } from './auth.js';
 import { 
-    showPage, initializeUI, renderAll, showPopup, hidePopup,
-    resetInputForms, showTransactionDetails 
+    showPage, initializeUI, renderAll, showPopup,
+    resetInputForms, showTransactionDetails, showBalanceBreakdown 
 } from './ui.js';
 import { 
     collection, addDoc, onSnapshot, query, Timestamp, 
@@ -236,13 +236,17 @@ const setEditingTransactionId = (id) => {
 
 // --- EVENT LISTENERS INITIALIZATION ---
 const initEventListeners = () => {
-    // [FIXED] Event listener untuk semua tombol navigasi
     document.querySelectorAll('.nav-btn, .bottom-nav-btn').forEach(btn => {
         if (btn.dataset.page) {
             btn.addEventListener('click', () => {
                 showPage(btn.dataset.page, transactions, editingTransactionId);
             });
         }
+    });
+    
+    // [FIXED] Menambahkan event listener untuk kartu saldo
+    document.getElementById('saldo-card').addEventListener('click', () => {
+        showBalanceBreakdown(transactions);
     });
 
     document.getElementById('logout-btn').addEventListener('click', logOut);
