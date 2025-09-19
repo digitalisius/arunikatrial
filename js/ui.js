@@ -1,5 +1,4 @@
 export function showPage(pageId) {
-    // Tambahkan baris ini untuk membuat halaman scroll ke atas secara otomatis
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
     document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
@@ -8,9 +7,19 @@ export function showPage(pageId) {
         currentPageEl.classList.remove('hidden');
     }
 
+    // --- LOGIKA BARU UNTUK NAVIGASI AKTIF ---
+    const parentMenus = {
+        'dukungan': 'lainnya',
+        'leaderboard': 'lainnya',
+        'review': 'lainnya'
+    };
+    const activePageId = parentMenus[pageId] || pageId;
+    // --- AKHIR LOGIKA BARU ---
+
     const setActive = (btns, attribute) => {
         btns.forEach(btn => btn.classList.remove('active'));
-        const activeBtn = Array.from(btns).find(btn => btn.getAttribute(attribute) === `window.app.showPage('${pageId}')`);
+        // Menggunakan activePageId untuk mencari tombol yang benar
+        const activeBtn = Array.from(btns).find(btn => btn.getAttribute(attribute) === `window.app.showPage('${activePageId}')`);
         if (activeBtn) activeBtn.classList.add('active');
     }
     setActive(document.querySelectorAll('.nav-btn'), 'onclick');
@@ -23,12 +32,12 @@ export function showPage(pageId) {
        reportSortModal.classList.add('hidden');
     }
 
-    // Reset form if navigating away from input page without editing
     const isEditing = document.getElementById('pemasukan-submit-btn').firstElementChild.textContent.includes('Perbarui');
     if (pageId !== 'input' && !isEditing) {
         resetInputForms();
     }
 }
+
 
 export function switchForm(formType) {
     ['pemasukan', 'pengeluaran', 'transfer'].forEach(type => {
