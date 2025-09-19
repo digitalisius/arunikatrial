@@ -171,7 +171,7 @@ const handleFormSubmit = async (e) => {
         
         setEditingTransactionId(null);
         resetInputForms();
-        showPopup({ title: 'Berhasil!', message: 'Data transaksi telah disimpan, Bos!', icon: 'success', buttons: [{ text: 'Oke', action: () => showPage('beranda') }] });
+        showPopup({ title: 'Berhasil!', message: 'Data transaksi telah disimpan, Bos!', icon: 'success', buttons: [{ text: 'Oke', action: () => showPage('beranda', transactions) }] });
     } catch (error) {
         console.error("Form submit error:", error);
         showPopup({ title: 'Gagal Menyimpan', message: 'Terjadi kesalahan. Silakan coba lagi.', icon: 'error', buttons: [{ text: 'Tutup' }] });
@@ -236,7 +236,7 @@ const setEditingTransactionId = (id) => {
 
 // --- EVENT LISTENERS INITIALIZATION ---
 const initEventListeners = () => {
-    // Event listener untuk semua tombol navigasi
+    // [FIXED] Event listener untuk semua tombol navigasi
     document.querySelectorAll('.nav-btn, .bottom-nav-btn').forEach(btn => {
         // Hanya tambahkan listener jika tombol memiliki 'data-page'
         if (btn.dataset.page) {
