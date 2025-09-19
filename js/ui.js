@@ -10,7 +10,6 @@ const formatRupiah = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', 
 
 // --- PAGE & FORM SWITCHING ---
 export const showPage = (pageId, transactions, editingTransactionId) => {
-    // [FIXED] Kembali ke atas halaman setiap kali pindah halaman
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
     document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
@@ -81,6 +80,78 @@ export const showPopup = (config) => {
 };
 
 export const hidePopup = () => document.getElementById('popup-modal').classList.add('hidden');
+
+// [FIXED] Menambahkan fungsi untuk menampilkan rincian saldo
+export const showBalanceBreakdown = (transactions) => {
+    const balanceBreakdownModal = document.getElementById('balance-breakdown-modal');
+    const balanceBreakdownList = document.getElementById('balance-breakdown-list');
+    const locations = {};
+    
+    transactions.forEach(t => {
+        const initLocation = (loc) => {
+            if (!locations[loc]) {
+                locations[loc] = { suami: 0, istri: 0, total: 0 };
+            }
+        };
+
+        if (t.type === 'pemasukan' && t.disimpanDi) {
+            const loc = t.disimpanDi.trim();
+            initLocation(loc);
+            const owner = t.oleh.toLowerCase();
+            locations[loc][owner] = (locations[loc][owner] || 0) + t.jumlah;
+            locations[loc].total += t.jumlah;
+        } else if (t.type === 'pengeluaran' && t.dariLokasi) {
+            const loc = t.dariLokasi.trim();
+            initLocation(loc);
+            const owner = t.oleh.toLowerCase();
+            locations[loc][owner] = (locations[loc][owner] || 0) - t.jumlah;
+            locations[loc].total -= t.jumlah;
+        } else if (t.type === 'transfer') {
+            const fromLoc = t.dari.trim();
+            const toLoc = t.ke.trim();
+            initLocation(fromLoc);
+            initLocation(toLoc);
+
+            const fromOwner = t.dariOleh.toLowerCase();
+            const toOwner = t.keOleh.toLowerCase();
+
+            locations[fromLoc].total -= t.jumlah;
+            locations[toLoc].total += t.jumlah;
+            
+            locations[fromLoc][fromOwner] = (locations[fromLoc][fromOwner] || 0) - t.jumlah;
+            locations[toLoc][toOwner] = (locations[toLoc][toOwner] || 0) + t.jumlah;
+        }
+    });
+
+    const hasData = Object.values(locations).some(loc => loc.total > 0.01);
+
+    if (!hasData) {
+        balanceBreakdownList.innerHTML = `<p class="text-gray-500 text-center py-4">Belum ada dana yang tersimpan di lokasi tertentu.</p>`;
+    } else {
+        balanceBreakdownList.innerHTML = Object.entries(locations)
+            .sort(([, a], [, b]) => b.total - a.total)
+            .map(([location, data]) => {
+                if (data.total <= 0.01) return '';
+                
+                let subItems = '';
+                if (data.suami !== 0) subItems += `<div class="flex justify-between"><span>Dana Suami:</span><span>${formatRupiah(data.suami || 0)}</span></div>`;
+                if (data.istri !== 0) subItems += `<div class="flex justify-between"><span>Dana Istri:</span><span>${formatRupiah(data.istri || 0)}</span></div>`;
+                
+                return `
+                    <div class="p-3 bg-gray-50 rounded-lg">
+                        <div class="flex justify-between items-center text-sm mb-2">
+                            <span class="font-medium text-gray-700">${location}</span>
+                            <span class="font-bold text-gray-900">${formatRupiah(data.total)}</span>
+                        </div>
+                        ${ subItems ? `<div class="pl-4 border-l-2 border-gray-200 space-y-1 text-xs text-gray-600">${subItems}</div>` : '' }
+                    </div>
+                `;
+            }).join('');
+    }
+    balanceBreakdownModal.classList.remove('hidden');
+    feather.replace();
+};
+
 
 // --- RENDER FUNCTIONS ---
 const renderDashboard = (transactions) => {
@@ -360,6 +431,11 @@ const initUIEventListeners = () => {
     const detailModal = document.getElementById('detail-modal');
     document.getElementById('close-modal-btn').addEventListener('click', () => detailModal.classList.add('hidden'));
     detailModal.addEventListener('click', (e) => { if (e.target === detailModal) detailModal.classList.add('hidden'); });
+
+    // [FIXED] Menambahkan event listener untuk menutup modal rincian saldo
+    const balanceBreakdownModal = document.getElementById('balance-breakdown-modal');
+    document.getElementById('close-balance-modal-btn').addEventListener('click', () => balanceBreakdownModal.classList.add('hidden'));
+    balanceBreakdownModal.addEventListener('click', (e) => { if (e.target === balanceBreakdownModal) balanceBreakdownModal.classList.add('hidden'); });
     
     document.getElementById('recent-transactions-list').addEventListener('click', (e) => {
         const item = e.target.closest('[data-transaction-id]');
