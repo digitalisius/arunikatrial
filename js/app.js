@@ -171,7 +171,7 @@ const handleFormSubmit = async (e) => {
         
         setEditingTransactionId(null);
         resetInputForms();
-        showPopup({ title: 'Berhasil!', message: 'Data transaksi telah disimpan, Bos!', icon: 'success', buttons: [{ text: 'Oke', action: () => showPage('beranda', transactions) }] });
+        showPopup({ title: 'Berhasil!', message: 'Data transaksi telah disimpan, Bos!', icon: 'success', buttons: [{ text: 'Oke', action: () => showPage('beranda', transactions, editingTransactionId) }] });
     } catch (error) {
         console.error("Form submit error:", error);
         showPopup({ title: 'Gagal Menyimpan', message: 'Terjadi kesalahan. Silakan coba lagi.', icon: 'error', buttons: [{ text: 'Tutup' }] });
@@ -238,7 +238,6 @@ const setEditingTransactionId = (id) => {
 const initEventListeners = () => {
     // [FIXED] Event listener untuk semua tombol navigasi
     document.querySelectorAll('.nav-btn, .bottom-nav-btn').forEach(btn => {
-        // Hanya tambahkan listener jika tombol memiliki 'data-page'
         if (btn.dataset.page) {
             btn.addEventListener('click', () => {
                 showPage(btn.dataset.page, transactions, editingTransactionId);
@@ -279,10 +278,17 @@ const initEventListeners = () => {
     document.getElementById('pagination-container').addEventListener('click', e => {
         const prevBtn = e.target.closest('#prev-page-btn');
         const nextBtn = e.target.closest('#next-page-btn');
-        if (prevBtn && reportCurrentPage > 1) setReportCurrentPage(reportCurrentPage - 1);
+        if (prevBtn && reportCurrentPage > 1) {
+            setReportCurrentPage(reportCurrentPage - 1);
+        }
         if (nextBtn) {
-            const totalPages = Math.ceil(transactions.filter(t => t.tanggal.getMonth() == document.getElementById('laporan-bulan').value && t.tanggal.getFullYear() == document.getElementById('laporan-tahun').value).length / reportItemsPerPage);
-            if(reportCurrentPage < totalPages) setReportCurrentPage(reportCurrentPage + 1);
+            const bulan = document.getElementById('laporan-bulan').value;
+            const tahun = document.getElementById('laporan-tahun').value;
+            const filtered = transactions.filter(t => t.tanggal.getMonth() == bulan && t.tanggal.getFullYear() == tahun);
+            const totalPages = Math.ceil(filtered.length / reportItemsPerPage);
+            if (reportCurrentPage < totalPages) {
+                setReportCurrentPage(reportCurrentPage + 1);
+            }
         }
     });
 };
