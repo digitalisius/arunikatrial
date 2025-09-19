@@ -10,19 +10,22 @@ const formatRupiah = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', 
 
 // --- PAGE & FORM SWITCHING ---
 export const showPage = (pageId, transactions, editingTransactionId) => {
+    // Kembali ke atas halaman setiap kali pindah halaman
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
     document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
     const currentPageEl = document.getElementById(pageId + '-page');
     if (currentPageEl) {
         currentPageEl.classList.remove('hidden');
     }
 
-    const setActive = (btns, attr) => {
+    const setActive = (btns) => {
         btns.forEach(btn => btn.classList.remove('active'));
-        const activeBtn = Array.from(btns).find(btn => btn.dataset[attr] === pageId);
+        const activeBtn = Array.from(btns).find(btn => btn.dataset.page === pageId);
         if(activeBtn) activeBtn.classList.add('active');
     };
-    setActive(document.querySelectorAll('.nav-btn'), 'page');
-    setActive(document.querySelectorAll('.bottom-nav-btn'), 'page');
+    setActive(document.querySelectorAll('.nav-btn'));
+    setActive(document.querySelectorAll('.bottom-nav-btn'));
 
     if (pageId === 'laporan') {
         document.getElementById('report-sort-modal').classList.remove('hidden');
@@ -212,7 +215,7 @@ const renderPaginationControls = (totalPages, currentPage) => {
 const renderRecentTransactions = (transactions) => {
     const recentList = document.getElementById('recent-transactions-list');
     recentList.innerHTML = '';
-    const sortedForRecent = transactions.slice().sort((a, b) => (b.createdAt || b.tanggal) - (a.createdAt || a.tanggal));
+    const sortedForRecent = transactions.slice().sort((a, b) => (b.createdAt || b.tanggal) - (a.createdAt || b.tanggal));
 
     if (transactions.length === 0) {
         recentList.innerHTML = `<p class="text-gray-500 text-center py-4">Belum ada aktivitas.</p>`;
@@ -446,3 +449,4 @@ const handleEditTransaction = (transactionId, transactions) => {
          document.getElementById('transfer-submit-btn').textContent = "Perbarui Transfer";
     }
 };
+
