@@ -4,6 +4,7 @@
 let financialChart;
 let chartState = { monthsToShow: 6, offset: 0 };
 let prevSaldo = 0;
+let uiInitialized = false; // Flag untuk mencegah listener dipasang berulang kali
 
 // --- UTILITY FUNCTIONS ---
 const formatRupiah = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n);
@@ -81,7 +82,6 @@ export const showPopup = (config) => {
 
 export const hidePopup = () => document.getElementById('popup-modal').classList.add('hidden');
 
-// [FIXED] Menambahkan fungsi untuk menampilkan rincian saldo
 export const showBalanceBreakdown = (transactions) => {
     const balanceBreakdownModal = document.getElementById('balance-breakdown-modal');
     const balanceBreakdownList = document.getElementById('balance-breakdown-list');
@@ -414,6 +414,8 @@ export const renderAll = (transactions, currentPage, itemsPerPage, sortBy) => {
 
 // --- UI EVENT LISTENERS ---
 const initUIEventListeners = () => {
+    if (uiInitialized) return; // Mencegah listener dipasang berulang kali
+
     document.querySelectorAll('.input-tab').forEach(tab => tab.addEventListener('click', () => switchForm(tab.dataset.form)));
     ['pemasukan-foto', 'pengeluaran-foto'].forEach(id => {
         document.getElementById(id).addEventListener('change', e => {
@@ -432,7 +434,6 @@ const initUIEventListeners = () => {
     document.getElementById('close-modal-btn').addEventListener('click', () => detailModal.classList.add('hidden'));
     detailModal.addEventListener('click', (e) => { if (e.target === detailModal) detailModal.classList.add('hidden'); });
 
-    // [FIXED] Menambahkan event listener untuk menutup modal rincian saldo
     const balanceBreakdownModal = document.getElementById('balance-breakdown-modal');
     document.getElementById('close-balance-modal-btn').addEventListener('click', () => balanceBreakdownModal.classList.add('hidden'));
     balanceBreakdownModal.addEventListener('click', (e) => { if (e.target === balanceBreakdownModal) balanceBreakdownModal.classList.add('hidden'); });
@@ -454,6 +455,8 @@ const initUIEventListeners = () => {
     });
     
     document.getElementById('close-sort-modal-btn').addEventListener('click', () => document.getElementById('report-sort-modal').classList.add('hidden'));
+    
+    uiInitialized = true; // Tandai bahwa listener UI sudah dipasang
 };
 
 export const resetInputForms = () => {
