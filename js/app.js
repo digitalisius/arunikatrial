@@ -236,6 +236,16 @@ const setEditingTransactionId = (id) => {
 
 // --- EVENT LISTENERS INITIALIZATION ---
 const initEventListeners = () => {
+    // Event listener untuk semua tombol navigasi
+    document.querySelectorAll('.nav-btn, .bottom-nav-btn').forEach(btn => {
+        // Hanya tambahkan listener jika tombol memiliki 'data-page'
+        if (btn.dataset.page) {
+            btn.addEventListener('click', () => {
+                showPage(btn.dataset.page, transactions, editingTransactionId);
+            });
+        }
+    });
+
     document.getElementById('logout-btn').addEventListener('click', logOut);
     document.getElementById('logout-btn-mobile').addEventListener('click', logOut);
 
@@ -279,3 +289,4 @@ document.addEventListener('DOMContentLoaded', () => {
     initAuth(onLogin, onLogout);
     initEventListeners();
 });
+
