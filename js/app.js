@@ -27,20 +27,13 @@ const CLOUDINARY_CLOUD_NAME = 'dtvmbvwtx';
 const CLOUDINARY_UPLOAD_PRESET = 'dompet';
 
 // --- INACTIVITY LOGIC ---
-/**
- * Mereset timer setiap kali ada aktivitas pengguna.
- */
 const resetInactivityTimer = () => {
     clearTimeout(inactivityTimer);
-    // Logout setelah 30 menit (30 * 60 * 1000 ms)
     inactivityTimer = setTimeout(() => {
         inactivityLogout();
     }, 30 * 60 * 1000); 
 };
 
-/**
- * Memasang event listener untuk mendeteksi aktivitas pengguna.
- */
 const setupActivityListeners = () => {
     const activityEvents = ['mousemove', 'mousedown', 'keypress', 'touchstart', 'scroll'];
     activityEvents.forEach(event => {
@@ -48,9 +41,6 @@ const setupActivityListeners = () => {
     });
 };
 
-/**
- * Melepas event listener saat pengguna logout.
- */
 const removeActivityListeners = () => {
     const activityEvents = ['mousemove', 'mousedown', 'keypress', 'touchstart', 'scroll'];
     activityEvents.forEach(event => {
@@ -58,7 +48,6 @@ const removeActivityListeners = () => {
     });
     clearTimeout(inactivityTimer);
 };
-
 
 // --- DATA LOGIC ---
 const listenToTransactions = () => {
@@ -200,15 +189,17 @@ const onLogin = (user) => {
     currentUser = user;
     document.getElementById('login-page').classList.add('hidden');
     document.getElementById('app-container').classList.remove('hidden');
+    
+    // [FIXED] Panggil semua inisialisasi APLIKASI UTAMA di sini, SETELAH login berhasil.
     listenToTransactions();
     initializeUI(user);
-    // Memulai deteksi inaktivitas
+    initAppEventListeners(); // Memasang listener untuk elemen di dalam aplikasi.
+    
     setupActivityListeners();
     resetInactivityTimer();
 };
 
 const onLogout = () => {
-    // Menghentikan deteksi inaktivitas
     removeActivityListeners();
     currentUser = null;
     transactions = [];
@@ -234,8 +225,9 @@ const setEditingTransactionId = (id) => {
     editingTransactionId = id;
 };
 
-// --- EVENT LISTENERS INITIALIZATION ---
-const initEventListeners = () => {
+// --- EVENT LISTENERS INITIALIZATION for APP ---
+const initAppEventListeners = () => {
+    // Listener untuk semua tombol navigasi
     document.querySelectorAll('.nav-btn, .bottom-nav-btn').forEach(btn => {
         if (btn.dataset.page) {
             btn.addEventListener('click', () => {
@@ -244,18 +236,21 @@ const initEventListeners = () => {
         }
     });
     
-    // [FIXED] Menambahkan event listener untuk kartu saldo
+    // Listener untuk kartu saldo
     document.getElementById('saldo-card').addEventListener('click', () => {
         showBalanceBreakdown(transactions);
     });
 
+    // Listener untuk tombol logout
     document.getElementById('logout-btn').addEventListener('click', logOut);
     document.getElementById('logout-btn-mobile').addEventListener('click', logOut);
 
+    // Listener untuk form
     document.getElementById('form-pemasukan').addEventListener('submit', handleFormSubmit);
     document.getElementById('form-pengeluaran').addEventListener('submit', handleFormSubmit);
     document.getElementById('form-transfer').addEventListener('submit', handleFormSubmit);
     
+    // Listener untuk aksi di tabel laporan
     document.getElementById('laporan-tabel').addEventListener('click', e => {
         const editBtn = e.target.closest('.edit-btn');
         const deleteBtn = e.target.closest('.delete-btn');
@@ -273,6 +268,7 @@ const initEventListeners = () => {
         }
     });
 
+    // Listener untuk filter dan paginasi laporan
     document.getElementById('laporan-bulan').addEventListener('change', () => setReportCurrentPage(1));
     document.getElementById('laporan-tahun').addEventListener('change', () => setReportCurrentPage(1));
 
@@ -295,11 +291,64 @@ const initEventListeners = () => {
             }
         }
     });
+
+    // Listener untuk tombol ekspor excel
+    document.getElementById('export-excel-btn').addEventListener('click', () => {
+        generateXLSX(transactions);
+    });
 };
+
+const generateXLSX = (transactionsToExport) => {
+    showPopup({ title: 'Mempersiapkan Excel...', message: 'Mohon tunggu, laporan sedang dibuat.', icon: 'loading' });
+    try {
+        const bulanSelect = document.getElementById('laporan-bulan');
+        const tahunSelect = document.getElementById('laporan-tahun');
+        const bulan = bulanSelect.options[bulanSelect.selectedIndex].text;
+        const tahun = tahunSelect.value;
+        
+        const filtered = transactionsToExport.filter(t => t.tanggal.getMonth() == bulanSelect.value && t.tanggal.getFullYear() == tahun);
+
+        if (filtered.length === 0) {
+            showPopup({ title: 'Gagal', message: 'Tidak ada data untuk diekspor pada periode ini.', icon: 'error', buttons: [{ text: 'Tutup' }] });
+            return;
+        }
+
+        const dataToExport = filtered.sort((a, b) => a.tanggal - b.tanggal).map(t => {
+            const base = {
+                "Tanggal Transaksi": t.tanggal.toLocaleDateString('id-ID'),
+                "Waktu Input": t.createdAt ? t.createdAt.toLocaleString('id-ID') : '',
+                Tipe: t.type,
+                Jumlah: t.jumlah,
+                Keterangan: t.keterangan || '',
+            };
+            if (t.type === 'pemasukan') {
+                return {...base, Oleh: t.oleh, "Disimpan Di": t.disimpanDi};
+            } else if (t.type === 'pengeluaran') {
+                return {...base, Oleh: t.oleh, "Dari Lokasi": t.dariLokasi, Kategori: t.kategori};
+            } else { // transfer
+                return { ...base, "Dari Dana": t.dariOleh, "Dari Lokasi": t.dari, "Ke Dana": t.keOleh, "Ke Lokasi": t.ke };
+            }
+        });
+
+        const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Laporan");
+        
+        const max_width = dataToExport.reduce((w, r) => Math.max(w, ...Object.values(r).map(val => String(val).length)), 10);
+        worksheet["!cols"] = Object.keys(dataToExport[0]).map(() => ({ wch: max_width + 2 }));
+
+        XLSX.writeFile(workbook, `laporan-keuangan-${bulan}-${tahun}.xlsx`);
+        showPopup({ title: 'Excel Siap!', message: 'Laporan Anda telah berhasil diunduh.', icon: 'success', buttons: [{ text: 'OK' }] });
+    } catch (err) {
+         showPopup({ title: 'Gagal', message: 'Terjadi kesalahan saat membuat file Excel.', icon: 'error', buttons: [{ text: 'Tutup' }] });
+    }
+};
+
 
 // --- APP INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
+    // Hanya inisialisasi Autentikasi saat halaman pertama kali dimuat.
+    // Listener lain akan dipasang setelah login berhasil.
     initAuth(onLogin, onLogout);
-    initEventListeners();
 });
 
