@@ -280,7 +280,10 @@ const initEventListeners = () => {
         const prevBtn = e.target.closest('#prev-page-btn');
         const nextBtn = e.target.closest('#next-page-btn');
         if (prevBtn && reportCurrentPage > 1) setReportCurrentPage(reportCurrentPage - 1);
-        if (nextBtn) setReportCurrentPage(reportCurrentPage + 1); // Logic handled in render
+        if (nextBtn) {
+            const totalPages = Math.ceil(transactions.filter(t => t.tanggal.getMonth() == document.getElementById('laporan-bulan').value && t.tanggal.getFullYear() == document.getElementById('laporan-tahun').value).length / reportItemsPerPage);
+            if(reportCurrentPage < totalPages) setReportCurrentPage(reportCurrentPage + 1);
+        }
     });
 };
 
